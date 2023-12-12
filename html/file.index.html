@@ -1,38 +1,59 @@
-<h4>{% trans %}Files{% endtrans %}</h4>
-<table class='table'>
-  <tr>
-    <th>{% trans %}File name{% endtrans %}</th>
-    <th>{% trans %}Uploaded{% endtrans %}</th>
-    <th>{% trans %}Type{% endtrans %}</th>
-    <th>{% if context.is_edit_ok() %}{% trans %}Edit{% endtrans %}{% else %}{% trans %}Details{% endtrans %}{% endif %}</th>
-    {% if context.is_edit_ok() %}<th>{% trans %}Remove{% endtrans %}</th>{% endif %}
-  </tr>
-  {% for file in context.files %}
-    <tr>
-      <td>
-        <a class="btn btn-sm btn-outline-primary" href='{{ file.download_url()|u|safe }}'>{{ file.name.plain()|u }}</a>
-      </td>
-      <td>{{ file.creator.plain()|u }}, {{ file.creation.plain()|u }}</td>
-      <td>{{ file.type.plain()|u }}</td>
-      <td>
-        <a class="btn btn-sm btn-success" href='file{{ file.id }}'>
-		  {% if file.is_edit_ok() %}
-		  {% trans %}edit{% endtrans %}
-		  {% else %}
-		  {% trans %}view{% endtrans %}
-		  {% endif %}
-		</a>
-      </td>
-      {% if file.is_edit_ok() %}
-        <td>
-          <form method="POST" action='issue{{ context.id }}'>
-            <input type="hidden" name="@remove@files" value='{{ file.id }}'>
-            <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
-            <input type="hidden" name="@action" value="edit">
-            <input class="btn btn-sm btn-danger" type="submit" value="{% trans %}remove{% endtrans %}">
-          </form>
-        </td>
-      {% endif %}
-    </tr>
-  {% endfor %}
-</table>
+{% extends 'layout/page.html' %}
+
+{% block head_title -%}
+  {% trans %}List of files{% endtrans %}
+{%- endblock %}
+
+{% block page_header -%}
+  {% trans %}List of files{% endtrans %}
+{%- endblock %}
+
+{% block content -%}
+
+  {% include 'layout/permission.html' %}
+
+  {% if context.is_view_ok() %}
+  <div class="row g-4 mb-4">
+    {% for file in context.list() if file.is_view_ok() -%}
+    {% set file_date = file.creation.plain()|u|replace('.', ' ') %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <article class="card h-100">
+        <div class="card-body d-flex flex-column">
+          <header>
+            <h2 class="card-title fs-4">
+              <a href="file{{ file.id }}">{{ file.name.plain()|u }}</a>
+            </h2>
+            <p class="card-subtitle">
+              {% trans %}Uploaded by{% endtrans %}
+              <a class="link-body-emphasis fw-semibold" href="user{{ file.creator.id }}"
+                 title="{{ file.creator.realname.plain()|d(file.creator.plain())|u }}">{{ file.creator.plain()|u }}</a>
+              <time datetime="{{ file_date }}" title="{{ file_date }}">{{ file.creation.reldate()|u }}</time>
+            </p>
+          </header>
+          {% if file.type -%}
+          <p class="card-text">
+            {% trans %}Content Type{% endtrans %}
+            <span class="fw-semibold" title="{{ file.type.plain()|u }}">{{ file.type.plain()|u }}</span>
+          </p>
+          {%- endif %}
+          <div class="d-grid d-md-flex justify-content-md-end mt-auto">
+            <a class="btn btn-sm btn-primary" href="{{ file.download_url()|u|safe }}">{% trans %}Download{% endtrans %}</a>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="d-grid d-lg-flex gap-4 mb-4 align-items-start justify-content-lg-between">
+    {% include 'layout/pagination.html' %}
+    <a class="btn btn-secondary" role="button"
+       href="{{ request.indexargs_url('file', {
+             '@action': 'export_csv',
+             '@columns': 'id,creation,name,type,creator'
+             }) }}">
+      {% trans %}Download as CSV{% endtrans %}
+    </a>
+  </div>
+  {% endif %}
+
+{%- endblock %}

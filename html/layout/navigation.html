@@ -1,174 +1,126 @@
-{% if request.user.hasPermission('View', 'query') %}
-  <p>
-    <b>{% trans %}Your Queries{% endtrans %}</b> (<a href="query?@template=edit">{% trans %}edit{% endtrans %}</a>)
-    {% for qs in request.user.queries %}
-    <br />
-    <a href="{{ qs.klass.plain() }}?{{ qs.url.plain() }}&amp;@dispname={{ qs.name.url_quote()|u }}">{{ qs.name.plain()|u }}</a>
-    {% endfor %}
-  </p>
-{% endif %}
-
-{% if request.user.hasPermission('View', 'issue') %}
-  <ul class='nav flex-column'>
-    <li class='nav-header'>
-      <i class='icon-fire'></i>{% trans %}Issues{% endtrans %}
-    </li>
-    {% if request.user.hasPermission('Create', 'issue') %}
-      <li>
-        <a href="issue?@template=item">{% trans %}Create New{% endtrans %}</a>
-      </li>
-    {% endif %}
-
-    <li class="nav-item">
-      <a href="{{ request.indexargs_url('issue', {
-        '@sort': '-activity',
-        '@group': 'priority',
-        '@filter': 'status,assignedto',
-        '@columns': columns,
-        '@search_text': '',
-        'status': status_notresolved,
-        'assignedto': '-1',
-        '@dispname': i18n.gettext('Show Unassigned'),
-       })|u }}">{% trans %}Show Unassigned{% endtrans %}</a>
-    </li>
-    <li class="nav-item">
-      <a href="{{ request.base }}?@dispname={{ i18n.gettext('Show All')|u|urlencode }}">{% trans %}Show All{% endtrans %}</a>
-    </li>
-    <li>
-      <a href="issue?@template=search">{% trans %}Search{% endtrans %}</a>
-    </li>
-    <li>
-      <form method="POST" class='form-inline' action="{{ request.base }}">
-        <div class="form-group">
-          <input type="hidden" name="@type" value="issue">
-          <input type="hidden" name="@action" value="show">
-          <input class="form-control form-control-sm col-2" type="text" name="@number">
-          <input class="btn btn-sm btn-outline-secondary" type="submit" value="{% trans %}Show issue{% endtrans %}">
-        </div>
+  {% if request.user.hasPermission('View', 'issue') -%}
+  <div class="d-grid d-lg-flex flex-fill gap-3 pb-3 pb-lg-0 px-lg-2">
+    <search class="flex-fill" title="{% trans %}Show issue{% endtrans %}">
+      <form class="d-flex gap-2" method="POST" action="{{ request.base }}">
+        <input type="hidden" name="@type" value="issue">
+        <input type="hidden" name="@action" value="show">
+        <input class="form-control" type="number" min="1" name="@number" placeholder="{% trans %}Show issue{% endtrans %}" required>
+        <button class="btn btn-outline-secondary d-lg-none" type="submit"><span class="bi bi-arrow-return-right"></span></button>
       </form>
-    </li>
-  </ul>
-  <hr>
-{% else %}
-  <p class='text-error'>{% trans %}You don't have permission to view issues.{% endtrans %}</p>
-{% endif %}
-
-<ul class='nav flex-column'>
-  {% if request.user.hasPermission('Create', 'keyword')
-        or request.user.hasPermission('Edit', 'keyword') %}
-    <li class='nav-header'>
-      <i class='icon-star'></i>{% trans %}Keywords{% endtrans %}
-    </li>
-  {% endif %}
-  {% if request.user.hasPermission('Create', 'keyword') %}
+    </search>
+    <search class="flex-fill" title="{% trans %}Search{% endtrans %}">
+      <form class="d-flex gap-2" name="searchform" method="get" action="issue">
+        <input type="hidden" name="@columns" value="{{ columns_showall }}"/>
+        <input type="hidden" name="@sort" value="-activity">
+        <input type="hidden" name="@group" value="priority">
+        <input type="hidden" name="@filter" value="status">
+        <input type="hidden" name="status" value="{{ status_notresolved }}"/>
+        <input class="form-control" id="search-text" type="search" name="@search_text" placeholder="{% trans %}Search{% endtrans %}">
+        <button class="btn btn-outline-secondary d-lg-none" type="submit"><span class="bi bi-search"></span></button>
+      </form>
+    </search>
+  </div>
+  {%- endif %}
+  <ul class="navbar-nav justify-content-end">
+    {% if request.user.hasPermission('View', 'issue') -%}
     <li class="nav-item">
-      <a href="keyword?@template=item">{% trans %}Create New{% endtrans %}</a>
+      <a class="nav-link text-nowrap" href="issue?@template=search">{% trans %}Advanced Search{% endtrans %}</a>
     </li>
-  {% endif %}
-  {% if request.user.hasPermission('Edit', 'keyword') %}
     <li class="nav-item">
-      <a href="keyword?@template=item">{% trans %}Edit Existing{% endtrans %}</a>
+      <a class="nav-link text-nowrap"
+         href="{{ request.indexargs_url('issue', {
+               '@sort': '-activity',
+               '@group': 'priority',
+               '@filter': 'status,assignedto',
+               '@columns': columns,
+               '@search_text': '',
+               'status': status_notresolved,
+               'assignedto': '-1',
+               '@dispname': i18n.gettext('Show Unassigned'),
+               })|u }}">{% trans %}Unassigned{% endtrans %}</a>
     </li>
-  {% endif %}
-</ul>
-{% if request.user.hasPermission('Create', 'keyword')
-      or request.user.hasPermission('Edit', 'keyword') %}
-<hr>
-{% endif %}
-
-{% if request.user.hasPermission('View', 'user') %}
-  <ul class='nav flex-column'>
-    <li class='nav-header'>
-      <i class='icon-eye-open'></i>{% trans %}Administration{% endtrans %}
+    {%- endif %}
+    {% if request.user.hasPermission('Create', 'keyword') or request.user.hasPermission('Edit', 'keyword') -%}
+    <li class="nav-item">
+      <a class="nav-link text-nowrap" href="keyword?@template=item">{% trans %}Keywords{% endtrans %}</a>
     </li>
-
-    {% if request.user.hasPermission('Edit', None) %}
-      <li>
-        <a href="home?@template=classlist">{% trans %}Class List{% endtrans %}</a>
-      </li>
-    {% endif %}
-
-    {% if request.user.hasPermission('View', 'user') or request.user.hasPermission('Edit', 'user') %}
-      <li>
-        <a href="user">{% trans %}User List{% endtrans %}</a>
-      </li>
-    {% endif %}
-
-    {% if request.user.hasPermission('Create', 'user') %}
-      <li>
-        <a href="user?@template=item">{% trans %}Add User{% endtrans %}</a>
-      </li>
-    {% endif %}
+    {%- endif %}
+    {% if request.user.hasPermission('Edit', None) -%}
+    <li class="nav-item">
+      <a class="nav-link text-nowrap" href="home?@template=classlist">{% trans %}Classes{% endtrans %}</a>
+    </li>
+    {%- endif %}
+    {% if request.user.hasPermission('View', 'user') or request.user.hasPermission('Edit', 'user') -%}
+    <li class="nav-item">
+      <a class="nav-link text-nowrap" href="user">{% trans %}Users{% endtrans %}</a>
+    </li>
+    {%- endif %}
+    {% if request.user.username == 'anonymous' -%}
+    <li class="nav-item">
+      <a class="nav-link text-nowrap" href="user?@template=forgotten">{% trans %}Lost your login?{% endtrans %}</a>
+    </li>
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">{% trans %}Login{% endtrans %}</a>
+      <div class="dropdown-menu dropdown-menu-lg-end p-3">
+        <form class="d-grid gap-3" method="POST" action="{{ request.base }}">
+          <input class="form-control w-auto" type="text" required name="__login_name" placeholder="{% trans %}Username{% endtrans%}">
+          <input class="form-control w-auto" type="password" required name="__login_password" placeholder="{% trans %}Password{% endtrans %}">
+          <div class="form-check form-switch">
+            <label class="form-check-label">
+              <input type="checkbox" class="form-check-input" name="remember">{% trans %}Remember me?{% endtrans %}
+            </label>
+          </div>
+          <input class="btn btn-primary" type="submit" value="{% trans %}Login{% endtrans %}">
+          {% if request.user.hasPermission('Register', 'user') -%}
+          <a class="btn btn-secondary" href="user?@template=register">{% trans %}Register{% endtrans %}</a>
+          {%- endif %}
+          <input type="hidden" name="@action" value="Login">
+          <input type="hidden" name="__came_from" value="{{ request.base }}{{ request.env.PATH_INFO }}{% if request.env.QUERY_STRING %}?{{ request.env.QUERY_STRING }}{% endif %}">
+        </form>
+      </div>
+    </li>
+    {% else -%}
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle text-nowrap" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ request.user.username.plain(escape=1) }}</a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item"
+             href="user{{ request.user.id }}">{% trans %}Your Details{% endtrans %}</a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+             href="{{ request.indexargs_url('issue', {
+                   '@sort': '-activity',
+                   '@group': 'priority',
+                   '@filter': 'status,assignedto',
+                   '@columns': 'id,activity,title,creator,status',
+                   '@search_text': '',
+                   'status': status_notresolved,
+                   'assignedto': request.user.id,
+                   '@dispname': i18n.gettext('Your Issues'),
+                   })|u }}">{% trans %}Your Issues{% endtrans %}</a>
+        </li>
+        {% if request.user.hasPermission('View', 'query') -%}
+        <li>
+          <a class="dropdown-item" href="query?@template=edit">{% trans %}Your Queries{% endtrans %}</a>
+        </li>
+        {% for qs in request.user.queries -%}
+        <li>
+          {% if loop.first -%}
+          <span class="dropdown-divider d-block"></span>
+          {%- endif %}
+          <a class="dropdown-item" href="{{ qs.klass.plain() }}?{{ qs.url.plain() }}&amp;@dispname={{ qs.name.url_quote()|u }}">{{ qs.name.plain()|u }}</a>
+        </li>
+        {% endfor %}
+        {%- endif %}
+        <li>
+          <span class="dropdown-divider d-block"></span>
+          <a class="dropdown-item"
+             href="{{ request.indexargs_url('', {
+                   '@action':'logout'
+                   }) }}">{% trans %}Logout{% endtrans %}</a>
+        </li>
+      </ul>
+    </li>
+    {%- endif %}
   </ul>
-  <hr>
-{% endif %}
-
-{% if request.user.username == 'anonymous' %}
-  <form method="POST" action='{{ request.base }}'>
-    <ul class='nav flex-column'>
-      <li class='nav-header'>
-        <i class='icon-user'></i>{% trans %}Login{% endtrans %}
-      </li>
-      <li class="nav-item">
-        <input class="form-control form-control-sm" type='text' required name="__login_name" placeholder='username'>
-      </li>
-      <li class="nav-item">
-        <input class="form-control form-control-sm" type="password" required name="__login_password" placeholder='password'>
-      </li>
-      <li class="nav-item">
-        <label class="form-control form-control-sm" class='checkbox'>
-          <input type="checkbox" name="remember"> {% trans %}Remember me?{% endtrans %}
-        </label>
-      </li>
-      <li class="nav-item">
-        <input class="btn btn-sm btn-secondary" type="submit" value="{% trans %}Login{% endtrans %}">
-      </li>
-      <li class='vspace-one'>
-        {% if request.user.hasPermission('Register', 'user') %}
-          <a href="user?@template=register">{% trans %}Register{% endtrans %}</a>
-        {% endif %}
-      </li>
-      <li class="nav-item">
-        <a href="user?@template=forgotten">{% trans %}Lost&nbsp;your&nbsp;login?{% endtrans %}</a>
-      </li>
-    </ul>
-    <input type="hidden" name="@action" value="Login">
-    <input type="hidden" name="__came_from" value="{{ request.base }}{{ request.env.PATH_INFO }}{% if request.env.QUERY_STRING %}?{{ request.env.QUERY_STRING }}{% endif %}">
-  </form>
-  <hr>
-{% else %}
-  <ul class='nav flex-column'>
-    <li class='nav-header'>
-      <i class='icon-user'></i>{% trans %}Hello,{% endtrans %}
-      <span class='username'>{{ request.user.username.plain(escape=1) }}</span>
-    </li>
-    <li>
-      <a href="{{ request.indexargs_url('issue', {
-        '@sort': '-activity',
-        '@group': 'priority',
-        '@filter': 'status,assignedto',
-        '@columns': 'id,activity,title,creator,status',
-        '@search_text': '',
-        'status': status_notresolved,
-        'assignedto': request.user.id,
-        '@dispname': i18n.gettext('Your Issues'),
-      })|u }}">{% trans %}Your Issues{% endtrans %}</a>
-    </li>
-    <li>
-      <a href="user{{ request.user.id }}">{% trans %}Your Details{% endtrans %}</a>
-    </li>
-    <li>
-      <a href="{{ request.indexargs_url('', {'@action':'logout'}) }}">{% trans %}Logout{% endtrans %}</a>
-    </li>
-  </ul>
-  <hr>
-{% endif %}
-
-<ul class='nav flex-column'>
-  <li class='nav-header'>
-    <i class='icon-bookmark'></i>{% trans %}Help{% endtrans %}
-  </li>
-  <li>
-    <a href="https://www.roundup-tracker.org">Roundup docs</a>
-  </li>
-</ul>

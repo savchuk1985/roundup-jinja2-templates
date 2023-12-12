@@ -1,18 +1,18 @@
 {% extends "layout/page.html" -%}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}"Your Queries" Editing{% endtrans %} - {{ config.TRACKER_NAME }}
-{% endblock -%}
+{%- endblock %}
 
-{% block page_header %}
-  {% if not context.is_edit_ok() %}
+{% block page_header -%}
+  {% if not context.is_edit_ok() -%}
     {% trans %}You are not allowed to edit queries.{% endtrans %}
-  {% else %}
+  {% else -%}
     {% trans %}"Your Queries" Editing{% endtrans %}
-  {% endif %}
-{% endblock -%}
+  {%- endif %}
+{%- endblock %}
 
-{% block extrajs %}
+{% block extrajs -%}
 <script nonce="{{ request.client.client_nonce }}"
     language="javascript">
 // This allows us to make the delete button an immediate action.
@@ -49,158 +49,151 @@ function post_to_url(path, params, method) {
     form.submit();
 }
 </script>
-{% endblock -%}
+{%- endblock %}
 
-{% macro include_query(query) %}
-<td>
-  {% if query.id not in request.user.queries %}
-  <select name="user{{ request.user.id }}@add@queries">
-    <option value="">{% trans %}leave out{% endtrans %}</option>
-    <option value="{{ query.id }}">{% trans %}include{% endtrans %}</option>
+{% macro include_query(query) -%}
+  {% if query.id not in request.user.queries -%}
+  <select class="form-select form-select-sm" name="user{{ request.user.id }}@add@queries">
+    <option value="">{% trans %}leave it out{% endtrans %}</option>
+    <option value="{{ query.id }}">{% trans %}include to mine{% endtrans %}</option>
   </select>
-  {% else %}
-  <select name="user{{ request.user.id }}@remove@queries">
-    <option value="">{% trans %}leave in{% endtrans %}</option>
-    <option value="{{ query.id }}">{% trans %}remove{% endtrans %}</option>
+  {% else -%}
+  <select class="form-select form-select-sm" name="user{{ request.user.id }}@remove@queries">
+    <option value="">{% trans %}leave it mine{% endtrans %}</option>
+    <option value="{{ query.id }}">{% trans %}remove from mine{% endtrans %}</option>
   </select>
-  {% endif %}
-</td>
-{% endmacro %}
+  {%- endif %}
+{%- endmacro -%}
 
-{% block content %}
+{% block content -%}
   {% include 'layout/permission.html' %}
-
+  {% set uid = request.user.id -%}
   {% if context.is_edit_ok() %}
-<form method="POST" onSubmit="return submit_once()" action="query"
-      enctype="multipart/form-data">
-
-<table class="list" width="100%">
-{% set uid = request.user.id -%}
-{% set mine = request.user.queries -%}
-
-<tr>
-  <th>{% trans %}Query{% endtrans %}</th>
-  <th>{% trans %}Include in "Your Queries"{% endtrans %}</th>
-  <th>{% trans %}Edit{% endtrans %}</th>
-  <th>{% trans %}Private to you?{% endtrans %}</th>
-  <th>{% trans %}delete/restore<br> (javascript<br>required){% endtrans %}</th>
-</tr>
-<tr>
-  <td colspan="5"><b>{% trans %}Queries I created{% endtrans %}</b></td>
-</tr>
-
-{% set queries = db.query.filter(filterspec={'creator': uid}) %}
-{% for query in queries %}
-<tr>
-  <td>
-    <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain() }}</a>
-  </td>
-
-  {{ include_query(query) }}
-
-  <td>
-    <a href="query{{ query.id }}">{% trans %}edit{% endtrans %}</a>
-  </td>
-
-  <td>
-    <select name="query{{ query.id }}@private_for">
-      <option {% if query.private_for == uid %}selected{% endif %}
-              value="{{ uid }}">{% trans %}yes{% endtrans %}</option>
-      <option {% if not query.private_for %}selected{% endif %}
-              value="-1">{% trans %}no{% endtrans %}</option>
-    </select>
-  </td>
-
-  <td>
-    <input class="btn btn-sm btn-danger" type="button"
-           value="{% trans %}Delete{% endtrans %}"
-           onClick="retire('{{ query.id }}','{{ utils.anti_csrf_nonce() }}')">
-  </td>
-</tr>
-{% endfor %}
-<tr>
- <td colspan="4"><b>{% trans %}Queries others created{% endtrans %}</b></td>
- <td colspan="4"><b>{% trans %}Owner{% endtrans %}</b></td>
-</tr>
-
-{% set queries = db.query.filter(filterspec={'private_for': None}) %}
-{% for query in queries %}
-<tr>
-  {% if query.creator != uid %}
-  <td>
-    <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain() }}</a>
-  </td>
-
-  {{ include_query(query) }}
-
-  {% if not query.is_edit_ok() %}
-  <td colspan="2">{% trans %}[not yours to edit]{% endtrans %}</td>
-  {% else %}
-  <td colspan="2"><a href="query{{ query.id }}">{% trans %}edit{% endtrans %}</a></td>
+  <form method="POST" onSubmit="return submit_once()" action="query"
+        enctype="multipart/form-data">
+    <div class="row g-4">
+      {% for query in db.query.filter()|sort(attribute='name') -%}
+      {% if query.creator == uid -%}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <article class="card-body d-flex flex-column">
+            <header>
+              <h2 class="fs-4 card-title">
+                <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain()|u }}</a>
+              </h2>
+              <p class="card-subtitle">
+                {% trans %}Created by{% endtrans%}
+                <a class="link-body-emphasis fw-semibold" href="user{{ query.creator.id }}"
+                   title="{{ query.creator.realname.plain()|d(query.creator.plain())|u }}">{{ query.creator.plain()|u }}</a>
+              </p>
+            </header>
+            <div class="d-grid gap-2 my-3">
+              {{ include_query(query)|indent(12) }}
+              <select class="form-select form-select-sm" name="query{{ query.id }}@private_for">
+                <option {% if query.private_for == uid %}selected{% endif %}
+                        value="{{ uid }}">{% trans %}private{% endtrans %}</option>
+                <option {% if not query.private_for %}selected{% endif %}
+                        value="-1">{% trans %}public{% endtrans %}</option>
+              </select>
+            </div>
+            <div class="d-grid d-md-flex gap-2 justify-content-md-end mt-auto">
+              <a class="btn btn-sm btn-primary" href="query{{ query.id }}" role="button">{% trans %}Edit{% endtrans %}</a>
+              <input class="btn btn-sm btn-danger" type="button" value="{% trans %}Delete{% endtrans %}"
+                     onClick="retire('{{ query.id }}','{{ utils.anti_csrf_nonce() }}')">
+            </div>
+          </article>
+        </div>
+      </div>
+      {%- endif %}
+      {% if not query.private_for and query.creator != uid -%}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <article class="card-body d-flex flex-column">
+            <header>
+              <h2 class="fs-4 card-title">
+                <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain()|u }}</a>
+              </h2>
+              <p class="card-subtitle">
+                {% trans %}Created by{% endtrans%}
+                <a class="link-body-emphasis fw-semibold" href="user{{ query.creator.id }}"
+                   title="{{ query.creator.realname.plain()|d(query.creator.plain())|u }}">{{ query.creator.plain()|u }}</a>
+              </p>
+            </header>
+            <div class="my-3">
+              {{ include_query(query)|indent(12) }}
+            </div>
+            {% if query.is_edit_ok() %}
+            <div class="d-grid d-md-flex justify-content-md-end mt-auto">
+              <a class="btn btn-sm btn-primary" href="query{{ query.id }}" role="button">{% trans %}Edit{% endtrans %}</a>
+            </div>
+            {% endif %}
+          </article>
+        </div>
+      </div>
+      {%- endif %}
+      {% endfor %}
+      {% for query in request.user.queries|sort(attribute='name') -%}
+      {% if query.is_retired() -%}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <article class="card-body d-flex flex-column">
+            <header>
+              <h2 class="fs-4 card-title">
+                <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain()|u }}</a>
+              </h2>
+              <p class="card-subtitle">
+                {% trans %}Created by{% endtrans %}
+                <a class="link-body-emphasis fw-semibold" href="user{{ query.creator.id }}"
+                   title="{{ query.creator.realname.plain()|d(query.creator.plain())|u }}">{{ query.creator.plain()|u }}</a>
+              </p>
+            </header>
+            <p class="card-text">{% trans %}Query is retired{% endtrans %}</p>
+            {% if query.creator != uid -%}
+            <div class="my-3">
+              {{ include_query(query)|indent(12) }}
+            </div>
+            {% else -%}
+            <div class="d-grid d-md-flex justify-content-md-end mt-auto">
+              <input class="btn btn-sm btn-success" type="button"
+                     value="{% trans %}Restore{% endtrans %}"
+                     onClick="restore('{{ query.id }}','{{ utils.anti_csrf_nonce() }}')">
+            </div>
+            {%- endif %}
+          </article>
+        </div>
+      </div>
+      {%- endif %}
+      {% if query.private_for and query.creator != uid -%}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <article class="card-body">
+            <header>
+              <h2 class="fs-4 card-title">
+                <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain() }}</a>
+              </h2>
+              <p class="card-subtitle">
+                {% trans %}Created by{% endtrans %}
+                <a class="link-body-emphasis fw-semibold" href="user{{ query.creator.id }}"
+                   title="{{ query.creator.realname.plain()|d(query.creator.plain())|u }}">{{ query.creator.plain()|u }}</a>
+              </p>
+            </header>
+            <p class="card-text">{% trans %}Query is private{% endtrans %}</p>
+            <div class="my-2">
+              {{ include_query(query)|indent(12) }}
+            </div>
+          </article>
+        </div>
+      </div>
+      {%- endif %}
+      {% endfor %}
+    </div>
+    <div class="d-grid d-lg-flex justify-content-lg-end my-3">
+      <input type="hidden" name="@action" value="edit">
+      <input type="hidden" name="@template" value="edit">
+      <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
+      <input class="btn btn-primary" type="submit"
+             value="{% trans %}Save Selection{% endtrans %}">
+    </div>
+  </form>
   {% endif %}
-  <td colspan="2">{{ query.creator.plain()|u }}</td>
-  {% endif %}
-</tr>
-{% endfor %}
-
-<tr>
- <td colspan="5"><b>{% trans %}Active retired/private queries{% endtrans %}</b></td>
-</tr>
-{% for query in request.user.queries %}
-<tr>
-  {% if query.is_retired() %}
-  <td>
-    <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain() }}</a>
-  </td>
-
-  {% if query.creator != uid %}
-  {{ include_query(query) }}
-  {% endif %}
-
-  <td colspan="{% if query.creator == uid %}3{% else %}2{% endif %}">{% trans %}[query is retired]{% endtrans %}</td>
-  {% if query.creator == uid %}
-  <td>
-    <input class="btn btn-sm btn-success" type="button"
-           value="{% trans %}Restore{% endtrans %}"
-           onClick="restore('{{ query.id }}','{{ utils.anti_csrf_nonce() }}')" />
-  </td>
-  {% else %}
-  <td>{{ query.creator.plain()|u }}</td>
-  {% endif %}
-  {% endif %}
-</tr>
-<tr>
-  {% if query.private_for and query.creator != uid %}
-  <td>
-    <a href="{{ query.klass.plain()|u }}?{{ query.url.plain()|u }}">{{ query.name.plain() }}</a>
-  </td>
-
-  {{ include_query(query) }}
-
-  <td colspan="2">{% trans %}[query is private]{% endtrans %}</td>
-  {% if query.creator == uid %}
-  <td>
-    <input type="button" value="{% trans %}Restore{% endtrans %}"
-           onClick="restore('{{ query.id }}','{{ utils.anti_csrf_nonce() }}')" />
-  </td>
-  {% endif %}
-  <td>{{ query.creator.plain()|u }}</td>
-  {% endif %}
-</tr>
-{% endfor %}
-<tr>
-  <td colspan="5">
-    <input type="hidden" name="@action" value="edit" />
-    <input type="hidden" name="@template" value="edit" />
-    <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}" />
-    <input class="btn btn-primary" type="submit"
-           value="{% trans %}Save Selection{% endtrans %}" />
-  </td>
-</tr>
-
-</table>
-
-</form>
-</td>
-{% endif %}
-{% endblock %}
+{%- endblock %}

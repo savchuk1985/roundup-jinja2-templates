@@ -1,43 +1,43 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}Password reset request{% endtrans %} - {{ config.TRACKER_NAME }}
-{% endblock %}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}Password reset request{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
-  <p>
-    {% trans %}If you know the email address you registered with, enter it below.{% endtrans %}
-  </p>
-
-  <form method="POST" action='{{ context.designator() }}'>
-    <div>
-      <label>{% trans %}Email Address{% endtrans %}:</label>
-      <input type='text' name="address">
-      <input name="@csrf" type="hidden"
-             value="{{ utils.anti_csrf_nonce() }}">
-      <input type="hidden" name="@action" value="passrst">
-      <input type="hidden" name="@template" value="forgotten">
-      <input type="submit" value="{% trans %}Password reset{% endtrans %}" class='btn btn-primary'>
+  <form class="row g-4" method="POST" action="{{ context.designator() }}">
+    <div class="col-lg-6 mb-4">
+      <p>{% trans %}If you know the email address you registered with, enter it below.{% endtrans %}</p>
+      <label class="form-label" for="address-input-group">{% trans %}Email Address{% endtrans %}:</label>
+      <div class="input-group" id="address-input-group">
+        <input class="form-control" type="email" name="address">
+        <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
+        <input type="hidden" name="@action" value="passrst">
+        <input type="hidden" name="@template" value="forgotten">
+        <input class="btn btn-primary" type="submit" value="{% trans %}Password reset{% endtrans %}">
+      </div>
     </div>
-
-    <div class="vspace-two">
+    <div class="col-lg-6 mb-4">
       <p>{% trans %}Or, if you know your username, then enter it below{% endtrans %}.</p>
-      <label>{% trans %}Username{% endtrans %}:</label>
-      <input type='text' name="username">
-      <input type="submit" value="{% trans %}Password reset{% endtrans %}" class='btn btn-info'>
+      <label class="form-label" for="username-input-group">{% trans %}Username{% endtrans %}:</label>
+      <div class="input-group" id="username-input-group">
+        <input class="form-control" type="text" name="username">
+        <input class="btn btn-primary" type="submit" value="{% trans %}Password reset{% endtrans %}">
+      </div>
     </div>
   </form>
-
-  <div class="vspace-two">
-    <p>
-      {% trans %}A confirmation email will be sent to you -
-      please follow the instructions within it to complete the reset process.{% endtrans %}
-    </p>
+  <div class="card">
+    <div class="card-body">
+      <p class="card-text">
+        {% trans %}A confirmation email will be sent to you -
+        please follow the instructions within it to complete the reset process.{% endtrans %}
+      </p>
+    </div>
   </div>
 
-{% endblock %}
+{%- endblock %}

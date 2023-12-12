@@ -1,14 +1,19 @@
-<div class="navbar navbar-light bg-light">
-  <a href="{{ request.base }}" class='navbar-brand'>
-    <i class='icon-home'></i> {{ config.TRACKER_NAME|u }}
-  </a>
-  <form name="searchform" method="get" action="issue" class='form-inline my-2 my-lg-0 navbar-search'>
-    <input type="hidden" name="@columns" value="{{ columns_showall }}"/>
-    <input type="hidden" name="@sort" value="-activity">
-    <input type="hidden" name="@group" value="priority">
-    <input type="hidden" name="@filter" value="status">
-    <input type="hidden" name="status" value="{{ status_notresolved }}"/>
-    <input class="form-control form-control-sm mr-sm-2 search-query" id="search-text" type="search" name="@search_text">
-    <input class="btn btn-sm btn-outline-success my-2 my-sm-0" type="submit" value="{% trans %}Search{% endtrans %}" name="submit">
-  </form>
-</div>
+<header class="navbar navbar-expand-lg sticky-top bg-body-tertiary border-bottom">
+  <div class="container">
+    <a class="navbar-brand text-nowrap" href="{{ request.base }}">{{ config.TRACKER_NAME|u }}</a>
+    <div class="offcanvas offcanvas-start bg-body-tertiary" id="offcanvas">
+      <div class="offcanvas-header">
+        <strong class="h1">{{ config.TRACKER_NAME|u }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <nav class="offcanvas-body">
+      {% block offcanvas -%}
+        {% include 'layout/navigation.html' %}
+      {%- endblock offcanvas %}
+      </nav>
+    </div>
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</header>

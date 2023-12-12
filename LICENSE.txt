@@ -1,6 +1,7 @@
 Licensing Jinja2 based templates for Roundup Issue Tracker
 ----------------------------------------------------------
 
+| Copyright (c) 2023 Anton Savchuk (a.savchuk@gmx.com)
 | Copyright (c) 2013-2023 Roundup-Team (https://opensource.org/license/mit/)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

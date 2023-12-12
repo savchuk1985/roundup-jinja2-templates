@@ -1,110 +1,207 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
-  {% trans %}List of issues{% endtrans %}
-{% endblock %}
+{% set batch = request.batch() %}
+{% if request.group|length >= 1 %}
+{% set key1 = request.group[0][1] %}
+{% endif %}
+{% if request.group|length >= 2 %}
+{% set key2 = request.group[1][1] %}
+{% endif %}
 
-{% block page_header %}
-  {% trans %}List of issues{% endtrans %}
-{% endblock %}
+{% macro ungrouped(name) -%}
+  {{ '(no %s set)' % name }}
+{%- endmacro %}
 
-{% block content %}
+{% macro print_grouper(grouper) -%}
+  <h2>{{ grouper }}</h2>
+{%- endmacro %}
+
+{% macro print_issue(issue) -%}
+  <div class="row gx-3 gy-2 mb-1">
+    <header class="col-auto">
+      {% if request.show.id %}<span class="me-2" title="ID: {{ issue.id }}">{{ issue.id }}</span>{% endif %}
+      {% if request.show.title %}<a href="issue{{ issue.id }}">{{ issue.title.plain(hyperlink=0)|u }}</a>{% endif %}
+    </header>
+    {% if request.show.keyword and issue.keyword %}
+    <ul class="col-auto list-inline mb-0">
+      {% for kw in issue.keyword.plain().split(',')|map('trim') -%}
+      <li class="list-inline-item">
+        <a class="badge text-bg-secondary text-decoration-none"  title="{% trans %}Keyword{% endtrans %}: {{ kw }}"
+           href="{{ request.indexargs_url('issue', {
+                 '@search_text': '',
+                 '@sort': '-activity',
+                 '@group': 'priority',
+                 '@filter': 'keyword',
+                 'keyword': request.client.db.keyword.lookup(kw),
+                 })|u }}">{{ kw }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <ul class="col-auto ms-lg-auto list-inline mb-0">
+      {% if issue.files -%}
+      <li class="list-inline-item">
+        <small title="{% trans %}Files{% endtrans %}: {{ issue.files|length }}">
+        {% trans n=issue.files|length %}{{ n }} file{% pluralize %}{{ n }} files{% endtrans %}
+        </small>
+      </li>
+      {%- endif %}
+      {% if issue.messages -%}
+      <li class="list-inline-item">
+        <small title="{% trans %}Messages{% endtrans %}: {{ issue.messages|length }}">
+        {% trans n=issue.messages|length %}{{ n }} message{% pluralize %}{{ n }} messages{% endtrans %}
+        </small>
+      </li>
+      {%- endif %}
+    </ul>
+  </div>
+  <ul class="row list-unstyled mb-0">
+    {% if request.show.status -%}
+    <li class="col-auto col-lg">
+      {% if issue.status -%}
+      <small title="{% trans %}Status{% endtrans %}: {{ issue.status.plain()|u }}">
+        {{ issue.status.plain()|u }}
+      </small>
+      {%- endif %}
+    </li>
+    {%- endif %}
+    {% if request.show.assignedto -%}
+    <li class="col-auto col-lg">
+      {% if issue.assignedto -%}
+      <small title="{% trans %}Assigned to{% endtrans %}: {{ issue.assignedto.plain()|u }}">
+        {% trans %}Assigned to{% endtrans %}
+        <a class="link-body-emphasis" href="user{{ issue.assignedto.id }}">{{ issue.assignedto.plain()|u }}</a>
+      </small>
+      {% else -%}
+      <small title="{% trans %}Unassigned{% endtrans %}">
+        {% trans %}Unassigned{% endtrans %}
+      </small>
+      {%- endif %}
+    </li>
+    {%- endif %}
+    {% if request.show.priority -%}
+    <li class="col-auto col-lg">
+      {% if issue.priority -%}
+      <small title="{% trans %}Priority{% endtrans %}: {{ issue.priority.plain()|u }}">
+        {{ issue.priority.plain()|u }}
+      </small>
+      {%- endif %}
+    </li>
+    {%- endif %}
+    {% if request.show.creator -%}
+    <li class="col-auto col-lg">
+      {% if issue.creator %}{% set creation_date = issue.creation.plain()|replace('.', ' ') %}
+      <small title="{% trans %}Created by{% endtrans %} {{ issue.creator.plain()|u }} on {{ creation_date}}">
+        {% trans %}Created by{% endtrans %}
+        <a class="link-body-emphasis" href="user{{ issue.creator.id }}">{{ issue.creator.plain()|u }}</a>
+      </small>
+      {% endif %}
+    </li>
+    {%- endif %}
+    {% if request.show.actor -%}
+    <li class="col-auto col-lg">
+      {% if issue.actor -%}
+      <small title="{% trans %}Actor{% endtrans %}: {{ issue.actor.plain()|u }}">
+        {% trans %}Updated by{% endtrans %}
+        <a class="link-body-emphasis" href="user{{ issue.actor.id }}">{{ issue.actor.plain()|u }}</a>
+      </small>
+      {%- endif %}
+    </li>
+    {%- endif %}
+    {% if request.show.activity -%}
+    <li class="col-auto col-lg text-lg-end">
+      {% if issue.activity %}{% set activity_date = issue.activity.plain()|replace('.', ' ') %}
+      <small title="{% trans %}Updated by{% endtrans %} {{ issue.actor.plain()|u }} on {{ activity_date }}">
+        <time datetime="{{ activity_date }}">{{ issue.activity.reldate()|u }}</time>
+      </small>
+      {% endif %}
+    </li>
+    {%- endif %}
+  </ul>
+{%- endmacro %}
+
+{% block head_title -%}
+  {% trans %}List of issues{% endtrans %}
+{%- endblock %}
+
+{% block page_header -%}
+  {% trans %}List of issues{% endtrans %}
+{%- endblock %}
+
+{% block content -%}
 
   {% include 'layout/permission.html' %}
 
-  {% if context.is_view_ok() %}
-    {% set batch = request.batch() %}
-    {% if batch %}
-      <table class='table'>
-        <tr class='info'>
-		  {% if request.show.priority %}
-          <td>{% trans %}Priority{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.id %}
-          <td>{% trans %}ID{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.activity %}
-          <td>{% trans %}Activity{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.actor %}
-          <td>{% trans %}Actor{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.keyword %}
-          <td>{% trans %}Keyword{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.title %}
-          <td>{% trans %}Title{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.status %}
-          <td>{% trans %}Status{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.creator %}
-          <td>{% trans %}Creator{% endtrans %}</td>
-		  {% endif %}
-		  {% if request.show.assignedto %}
-          <td>{% trans %}Assigned To{% endtrans %}</td>
-		  {% endif %}
-        </tr>
-        {% for issue in batch %}
-          {% if request.group|length %}
-            {% set group = [request.group[0][1], request.group[1][1]] if request.group|length >= 2 else [request.group[0][1]] %}
-            {% if batch.propchanged(*group) %}
-              <tr>
-                <th class="text-center" colspan="{{ request.columns|length }}">
-                  {%- for g in group -%}
-                  {%- if issue[g] %} {% if g == 'id' %}{{ issue[g] }}{% else %}{{ issue[g].plain()|u }}{% endif %} {% else %} (no {{ g }} set) {% endif -%}
-                  {%- endfor -%}
-                </th>
-              </tr>
-            {% endif %}
-          {% endif %}
-          <tr>
-		   {% if request.show.priority %}
-           <td>{{ issue.priority.plain()|u }}</td>
-		   {% endif %}
-		   {% if request.show.id %}
-           <td>{{ issue.id }}</td>
-		   {% endif %}
-		   {% if request.show.activity %}
-           <td>{{ issue.activity.reldate()|u }}</td>
-		   {% endif %}
-		   {% if request.show.actor %}
-           <td>{{ issue.actor.plain()|u }}</td>
-		   {% endif %}
-		   {% if request.show.keyword %}
-           <td>{{ issue.keyword.plain()|u }}</td>
-		   {% endif %}
-		   {% if request.show.title %}
-           <td>
-            <a href='issue{{ issue.id }}'>{{ issue.title.plain(hyperlink=0)|u }}</a>
-           </td>
-		   {% endif %}
-		   {% if request.show.status %}
-           <td>{{ issue.status.plain()|u }}</td>
-		   {% endif %}
-		   {% if request.show.creator %}
-           <td>{{ issue.creator.plain()|u }}</td>
-		   {% endif %}
-		   {% if request.show.assignedto %}
-           <td>{{ issue.assignedto.plain()|u }}</td>
-		   {% endif %}
-          </tr>
-        {% endfor %}
-      </table>
-      {% include 'layout/pagination.html' %}
-      <div class="d-flex justify-content-end">
-        <a class='btn btn-sm btn-secondary'
-           href="{{ request.indexargs_url('issue', {'@action':'export_csv'}) }}">
-          {% trans %}Download as CSV{% endtrans %}
-        </a>
-      </div>
+  {% if context.is_view_ok() -%}
+  <div class="d-grid d-lg-flex gap-4 mb-4 align-items-start justify-content-lg-between">
+    {% include 'layout/pagination.html' %}
+    {% if request.user.hasPermission('Create', 'issue') -%}
+    <a class="btn btn-success text-nowrap" href="issue?@template=item" role="button">
+      {% trans %}Create New{% endtrans %}
+    </a>
+    {%- endif %}
+  </div>
+  {% if batch -%}
+  {% if request.group|length == 1 -%}
+  {% for group1 in batch|groupby(key1) -%}
+  {% set header = group1.grouper|default(ungrouped(key1), true) %}
+  <section class="mb-4">
+    <header class="mb-3">
+      {{ print_grouper(header) }}
+    </header>
+    <div class="list-group">
+      {% for issue in group1.list -%}
+      <article class="list-group-item">
+        {{ print_issue(issue) }}
+      </article>
+    {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+  {% elif request.group|length >= 2 -%}
+  {% for group1 in batch|groupby(key1) %}{% for group2 in group1.list|groupby(key2) -%}
+  {% set grouper1 = group1.grouper|default(ungrouped(key1), true) %}
+  {% set grouper2 = group2.grouper|default(ungrouped(key2), true) %}
+  {% set header = [grouper1, grouper2]|join(' ') %}
+  <section class="mb-4">
+    <header class="mb-3">
+      {{ print_grouper(header) }}
+    </header>
+    <div class="list-group">
+      {% for issue in group2.list -%}
+      <article class="list-group-item">
+        {{ print_issue(issue) }}
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}{% endfor %}
+  {% else -%}
+  <div class="mb-4">
+    <div class="list-group">
+      {% for issue in batch -%}
+      <article class="list-group-item">
+        {{ print_issue(issue) }}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+  {%- endif %}
+  <div class="mb-4">
+    {% include 'layout/sort.html' %}
+  </div>
+  <div class="d-grid d-lg-flex gap-4 mb-4 align-items-start justify-content-lg-between">
+    {% include 'layout/pagination.html' %}
+    <a class="btn btn-secondary text-nowrap" role="button"
+       href="{{ request.indexargs_url('issue', {'@action':'export_csv'}) }}">
+      {% trans %}Download as CSV{% endtrans %}
+    </a>
+  </div>
+  {% else -%}
+  <div class="text-center">
+    <p>{% trans %}There are no issues yet!{% endtrans %}</p>
+  </div>
+  {%- endif %}
+  {%- endif %}
 
-      {% include 'layout/sort.html' %}
-
-    {% else %}
-      <p class='text-error'>{% trans %}There are no issues yet!{% endtrans %}</p>
-    {% endif %}
-
-  {% endif %}
-
-{% endblock %}
+{%- endblock %}

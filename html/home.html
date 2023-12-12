@@ -2,7 +2,7 @@
   db.issue.renderWith('index',
     sort=[('-', 'activity')], group=[('+', 'priority')],
     filter=['status'],
-    columns=['id','activity','title','creator','assignedto', 'status'],
+    columns=['id','activity','title','creator','assignedto','status','keyword'],
     filterspec={'status':['-1','1','2','3','4','5','6','7']}
   )|u|safe
 }}

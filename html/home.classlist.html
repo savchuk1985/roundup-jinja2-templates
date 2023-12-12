@@ -1,30 +1,41 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}List of classes{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}List of classes{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
-  <div>
-    {% for cl in db.classes() %}
-      <div class='span4'>
-        <h4>
-          <a href='{{cl.classname}}'>{{ cl.classname.capitalize() }}</a>
-        </h4>
-
-        {% for prop in cl.properties() %}
-          <p>
-            <b>{{ prop._name }}</b> -&nbsp;
-            {{ prop._prop }}
-          </p>
-        {% endfor %}
-      </div>
+  <div class="row g-4">
+    {% for cl in db.classes() -%}
+    <div class="col-lg-4">
+      <article class="card">
+        <div class="card-body">
+          <div class="d-flex gap-2 align-items-center">
+            <header class="me-auto">
+              <h2 class="fs-4 card-subtitle text-capitalize">{{ cl.classname }}</h2>
+            </header>
+            <a class="btn btn-sm btn-secondary" data-bs-toggle="collapse" href="#{{ cl.classname }}" role="button">{% trans %}Properties{% endtrans %}</a>
+            <a class="btn btn-sm btn-primary" href="{{ cl.classname }}" role="button">{% trans %}Items{% endtrans %}</a>
+          </div>
+        </div>
+        <div class="collapse" id="{{ cl.classname }}">
+          <table class="table table-borderless table-striped mb-0">
+            {% for prop in cl.properties() -%}
+            <tr>
+              <th scope="row">{{ prop._name }}</th>
+              <td>{{ prop._prop }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </article>
+    </div>
     {% endfor %}
   </div>
 
-{% endblock %}
+{%- endblock %}

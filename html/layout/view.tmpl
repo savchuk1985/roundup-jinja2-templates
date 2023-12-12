@@ -1,24 +1,46 @@
-{% macro field_large(text, name) %}
-  <div class="col col-lg-12 row">
-    <dt class="col col-4 col-md-3 col-lg-2">{{ i18n.gettext(text)|u|safe }}</dt>
-    <dd class="col col-8 col-md-9 col-lg-10">{{ context[name].plain()|u }}</dd>
+{% macro field_header(name) %}
+  <div class="mb-4">
+    <h2>{{ context[name].plain()|u }}</h2>
   </div>
+{% endmacro -%}
+{% macro field_tags(text, name) %}
+  <ul class="list-unstyled d-flex gap-2 mb-2">
+    {% for item in context[name].plain().split(',')|map('trim')|u if context[name] %}
+    <li>
+      <a class="btn btn-sm btn-secondary" role="button"
+         title="{% trans %}{{ text }}{% endtrans %}: {{ item }}"
+         href="{{ request.indexargs_url('issue', {
+                  '@search_text': '',
+                  '@sort': '-activity',
+                  '@group': 'priority',
+                  '@filter': name,
+                  name: context._db[name].lookup(item)
+                  })|u }}">{{ item }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+{% endmacro -%}
+{% macro field_large(text, name) %}
+  <li class="d-flex border-bottom">
+    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="fw-semibold">{{ context[name].plain()|u|d('none', true) }}</span>
+  </li>
 {% endmacro -%}
 {% macro field_large_value(text, value) %}
-  <div class="col col-lg-12 row">
-    <dt class="col col-4 col-md-3 col-lg-2">{{ i18n.gettext(text)|u|safe }}</dt>
-    <dd class="col col-8 col-md-9 col-lg-10">{{ value|u|safe }}</dd>
-  </div>
+  <li class="d-flex border-bottom">
+    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="fw-semibold">{{ value|u|safe }}</span>
+  </li>
 {% endmacro -%}
 {% macro field_small(text, name) %}
-  <div class="col row mr-1">
-    <dt class="col col-4 col-md-3 col-lg-4">{{ i18n.gettext(text)|u|safe }}</dt>
-    <dd class="col col-8 col-md-9 col-lg-8">{{ context[name].plain()|u }}</dd>
-  </div>
+  <li class="d-flex border-bottom">
+    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="fw-semibold">{{ context[name].plain()|u|d('none', true) }}</span>
+  </li>
 {% endmacro -%}
 {% macro field_small_value(text, value) %}
-  <div class="col row mr-1">
-    <dt class="col col-4 col-md-3 col-lg-4">{{ i18n.gettext(text)|u|safe }}</dt>
-    <dd class="col col-8 col-md-9 col-lg-8">{{ value|u|safe }}</dd>
-  </div>
+  <li class="d-flex border-bottom">
+    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="fw-semibold">{{ value|u|safe }}</span>
+  </li>
 {% endmacro -%}

@@ -1,11 +1,13 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}Empty page{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block page_content %}
-  <p>
-    {% trans %}Please specify your search parameters!{% endtrans %}
-  </p>
-{% endblock %}
+{% block page_header -%}
+  {% trans %}Empty page{% endtrans %}
+{%- endblock %}
+
+{% block content -%}
+  <p>{% trans %}Please specify your search parameters!{% endtrans %}</p>
+{%- endblock %}

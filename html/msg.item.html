@@ -1,61 +1,75 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
-  {% if context.id %}
+{% block head_title -%}
+  {% if context.id -%}
     {% trans %}Message{% endtrans %} {{ context.id }} - {{ config.TRACKER_NAME }}
-  {% else %}
+  {% else -%}
     {% trans %}New Message{% endtrans %} - {{ config.TRACKER_NAME }}
-  {% endif %}
-{% endblock %}
+  {%- endif %}
+{%- endblock %}
 
-{% block page_header %}
-  {% if not (context.id or context.is_edit_ok()) %}
+{% block page_header -%}
+  {% if not (context.id or context.is_edit_ok()) -%}
     {% trans %}New Message{% endtrans %}
-  {% elif not context.id and context.is_edit_ok() %}
+  {% elif not context.id and context.is_edit_ok() -%}
     {% trans %}New Message Editing{% endtrans %}
-  {% elif context.id and not context.is_edit_ok() %}
+  {% elif context.id and not context.is_edit_ok() -%}
     {% trans %}Message{% endtrans %} {{ context.id }}
-  {% elif context.id and context.is_edit_ok() %}
+  {% elif context.id and context.is_edit_ok() -%}
     {% trans %}Message{% endtrans %} {{ context.id }} {% trans %}editing{% endtrans %}
-  {% endif %}
-{% endblock %}
+  {%- endif %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
   {% include 'layout/permission.html' %}
 
   {% if context.is_view_ok() %}
-    <dl class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-      <div class="col row">
-        <dt class="col col-auto">{% trans %}Author{% endtrans %}</dt>
-        <dd class="col col-auto">{{ context.author.plain()|u }}</dd>
-      </div>
-      <div class="col row">
-        <dt class="col col-auto">{% trans %}Date{% endtrans %}</dt>
-        <dd class="col col-auto">{{ context.date.plain()|u }}</dd>
-      </div>
-      <div class="col row">
-        <dt class="col col-auto">{% trans %}Message id{% endtrans %}</dt>
-        <dd class="col col-auto">{{ context.id }}</dd>
-      </div>
-    </dl>
-    <div>
-      <h4>Content</h4>
-      {% if context.type == 'text/markdown' %}
-        <div class="msg">{{ context.content.markdown()|u|safe }}</div>
-      {% elif context.type == 'text/x-rst' %}
-        <div class="msg">{{ context.content.rst()|u|safe }}</div>
-      {% else %}
-        <pre class="msg">{{ context.content.hyperlinked()|u|safe }}</pre>
-      {% endif %}
+  {% set msg_date = context.date.plain()|u|replace('.', ' ') %}
+  <div class="card mb-4">
+    <div class="card-body">
+      {% if context.type == 'text/markdown' -%}
+      <div class="card-text">{{ context.content.markdown()|u|safe }}</div>
+      {% elif context.type == 'text/x-rst' -%}
+      <div class="card-text">{{ context.content.rst()|u|safe }}</div>
+      {% else -%}
+      <pre class="card-text">{{ context.content.hyperlinked()|u|safe }}</pre>
+      {%- endif %}
     </div>
+  </div>
+
+  {% if context.files -%}
+  <section class="list-group mb-4">
+    {% for file in context.files -%}
+    <div class="list-group-item p-3">
+      <div class="d-grid d-md-flex gap-3 align-items-center">
+        <header class="d-flex gap-2 align-items-center overflow-hidden">
+          <h2 class="fs-6 fw-semibold text-truncate mb-0">
+            <a href="file{{ file.id }}" title="{{ file.name.plain()|u }}">{{ file.name.plain()|u }}</a>
+          </h2>
+          {% if file.type -%}
+          <div class="ms-auto">
+            <span class="badge text-bg-secondary" title="{{ file.type.plain()|u }}">{{ file.type.plain()|u }}</span>
+          </div>
+          {%- endif %}
+        </header>
+        <form class="d-grid d-md-flex gap-2 justify-content-md-end ms-md-auto" method="POST" action="issue{{ context.id }}">
+          <a class="btn btn-sm btn-primary" href="{{ file.download_url()|u|safe }}">{% trans %}Download{% endtrans %}</a>
+          {% if file.is_edit_ok() %}
+          <input type="hidden" name="@remove@files" value="{{ file.id }}">
+          <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
+          <input type="hidden" name="@action" value="edit">
+          <input class="btn btn-sm btn-danger" type="submit" value="{% trans %}Remove{% endtrans %}">
+          {% endif %}
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {%- endif %}
+  <section class="table-responsive">
+    {{ context.history()|u|safe }}
+  </section>
   {% endif %}
 
-  {% if context.files %}
-    {% include 'file.index.html' %}
-  {% endif %}
-
-  <div class='vspace-five'></div>
-  {{ context.history()|u|safe }}
-
-{% endblock %}
+{%- endblock %}

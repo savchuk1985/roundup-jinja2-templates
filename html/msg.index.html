@@ -1,42 +1,52 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}List of messages{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}List of messages{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
-  {% for msg in context.list() %}
-    <div>
-      <dl class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
-        <div class="col row">
-          <dt class="col col-auto">{% trans %}Author{% endtrans %}</dt>
-          <dd class="col col-auto">{{ msg.author.plain()|u }}</dd>
-        </div>
-        <div class="col row">
-          <dt class="col col-auto">{% trans %}Date{% endtrans %}</dt>
-          <dd class="col col-auto">{{ msg.date.plain()|u }}</dd>
-        </div>
-        <div class="col row">
-          <dt class="col col-auto">{% trans %}Message id{% endtrans %}</dt>
-          <dd class="col col-auto">{{ msg.id }}</dd>
-        </div>
-      </dl>
-      <div>
-      {% if msg.type == 'text/markdown' %}
-        <div class="msg">{{ msg.content.markdown()|u|safe }}</div>
-      {% elif msg.type == 'text/x-rst' %}
-        <div class="msg">{{ msg.content.rst()|u|safe }}</div>
-      {% else %}
-        <pre class="msg">{{ msg.content.hyperlinked()|u|safe }}</pre>
-      {% endif %}
-      </div>
+  {% include 'layout/permission.html' %}
+
+  {% for msg in context.list() if msg.is_view_ok() -%}
+  {% set msg_date = msg.date.plain()|u|replace('.', ' ') %}
+  <article class="card mb-4">
+    <header class="card-header d-flex gap-2 align-items-baseline">
+      <h2 class="fw-semibold fs-6 mb-0" title="ID: {{ msg.id }}">
+        <a class="link-body-emphasis text-decoration-none" href="msg{{ msg.id }}">{{ msg.id }}</a>
+      </h2>
+      <ul class="list-inline mb-0 ms-auto">
+        {% if msg.files -%}
+        <li class="list-inline-item">
+          <span class="badge text-bg-secondary" title="{% trans %}Files{% endtrans %}: {{ msg.files|length }}">
+            {% trans n=msg.files|length %}{{ n }} file{% pluralize %}{{ n }} files{% endtrans %}
+          </span>
+        </li>
+        {%- endif %}
+        <li class="list-inline-item">
+          {% trans %}Created by{% endtrans %}
+          <a class="link-body-emphasis fw-semibold" href="user{{ msg.author.id }}"
+             title="{{ msg.author.realname.plain()|d(msg.author.plain())|u }}">{{ msg.author.plain()|u }}</a>
+          <time title="{{ msg_date }}" datetime="{{ msg_date }}">{{ msg.date.reldate()|u }}</time>
+        </li>
+      </ul>
+    </header>
+    <div class="card-body">
+      {% if msg.type == 'text/markdown' -%}
+      <div class="card-text">{{ msg.content.markdown()|u|safe }}</div>
+      {% elif msg.type == 'text/x-rst' -%}
+      <div class="card-text">{{ msg.content.rst()|u|safe }}</div>
+      {% else -%}
+      <pre class="card-text">{{ msg.content.hyperlinked()|u|safe }}</pre>
+      {%- endif %}
     </div>
-    <hr>
+  </article>
   {% endfor %}
 
-{% endblock %}
+  {% include 'layout/pagination.html' %}
+
+{%- endblock %}

@@ -1,52 +1,82 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}User listing{% endtrans %} - {{ config.TRACKER_NAME }}
-{% endblock %}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}User listing{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
   {% include 'layout/permission.html' %}
 
-  {% if context.is_view_ok() %}
-    <table class='table'>
-      <tr class='info'>
-        <td>{% trans %}Username{% endtrans %}</td>
-        <td>{% trans %}Real name{% endtrans %}</td>
-        <td>{% trans %}Organisation{% endtrans %}</td>
-        <td>{% trans %}Email address{% endtrans %}</td>
-        <td>{% trans %}Phone number{% endtrans %}</td>
-        {% if context.is_retire_ok() %}
-          <td>{% trans %}Retire{% endtrans %}</td>
-        {% endif %}
-      </tr>
-      {% for user in context.list() %}
-        <tr>
-          <td>
-            <a href='user{{ user.id }}'>{{ user.username.plain()|u }}</a>
-          </td>
-          <td>{{ user.realname.plain()|u }}</td>
-          <td>{{ user.organisation.plain()|u }}</td>
-          <td>{{ user.address.email()|u }}</td>
-          <td>{{ user.phone.plain()|u }}</td>
-          {% if context.is_retire_ok() %}
-            <td>
-              <form method="POST" action='user{{ user.id }}' class='form-inline'>
-                <input type="hidden" name="@template" value="index">
-                <input name="@csrf" type="hidden"
-                       value="{{ utils.anti_csrf_nonce() }}">
-                <input type="hidden" name="@action" value="retire">
-                <input type="submit" value="{% trans %}retire{% endtrans %}" class='btn btn-sm btn-danger'>
-              </form>
-            </td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-    </table>
+  {% if context.is_view_ok() -%}
+  <div class="d-grid d-lg-flex gap-4 mb-4 align-items-start justify-content-lg-between">
+  {% include 'layout/pagination.html' %}
+  {% if request.user.hasPermission('Create', 'user') -%}
+  <a class="btn btn-success text-nowrap" href="user?@template=item" role="button">
+    {% trans %}Add User{% endtrans %}
+  </a>
+  {%- endif %}
+  </div>
+  <div class="row g-4 mb-4">
+    {% for user in context.list() -%}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100">
+        <article class="card-body d-flex flex-column">
+          <header>
+            <h2 class="card-title fs-4" title="{% trans %}Username{% endtrans %}: {{ user.username.plain()|u }}">
+              <a href="user{{ user.id }}">{{ user.username.plain()|u }}</a>
+            </h2>
+            {% if user.realname -%}
+            <p class="card-subtitle" title="{% trans %}Real name{% endtrans %}: {{ user.realname.plain()|u }}">
+              <strong>{{ user.realname.plain()|u }}</strong>
+            </p>
+            {%- endif %}
+          </header>
+          <div class="d-flex flex-column mt-2 mb-3 mb-lg-2">
+            {% if user.organisation -%}
+            <span title="{% trans %}Organisation{% endtrans %}: {{ user.organisation.plain()|u }}">
+              {{ user.organisation.plain()|u }}
+            </span>
+            {%- endif %}
+            {% if user.address -%}
+            <span title="{% trans %}Email address{% endtrans %}: {{ user.address.email()|u }}">
+              {{ user.address.email()|u }}
+            </span>
+            {%- endif %}
+            {% if user.phone -%}
+            <span title="{% trans %}Phone number{% endtrans %}: {{ user.phone.plain()|u }}">
+              {{ user.phone.plain()|u }}
+            </span>
+            {%- endif %}
+          </div>
+          {% if context.is_retire_ok() -%}
+          <form class="d-grid d-md-flex justify-content-lg-end mt-auto" method="POST" action="user{{ user.id }}">
+            <input type="hidden" name="@template" value="index">
+            <input name="@csrf" type="hidden"
+                   value="{{ utils.anti_csrf_nonce() }}">
+            <input type="hidden" name="@action" value="retire">
+            <input type="submit" value="{% trans %}retire{% endtrans %}" class="btn btn-sm btn-danger">
+          </form>
+          {%- endif %}
+        </article>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="d-grid d-lg-flex gap-4 mb-4 align-items-start justify-content-lg-between">
+    {% include 'layout/pagination.html' %}
+    <a class="btn btn-secondary" role="button"
+       href="{{ request.indexargs_url('user', {
+             '@action': 'export_csv',
+             '@columns': 'id,username,realname,organisation,phone,address,alternate_addresses'
+             }) }}">
+      {% trans %}Download as CSV{% endtrans %}
+    </a>
+  </div>
   {% endif %}
 
-{% endblock %}
+{%- endblock %}

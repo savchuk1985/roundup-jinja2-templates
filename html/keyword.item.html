@@ -1,42 +1,45 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}Keyword editing{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}Keyword editing{% endtrans %}
-{% endblock %}
+{%- endblock %}
 
-{% block content %}
+{% block content -%}
 
-  <h4>Existing Keywords</h4>
-  <ul class='nav nav-pills nav-stacked'>
-    {% for keyword in db.keyword.list() %}
-      <li class='nav-item'>
-        <a class='nav-link {{ 'active' if context.id == keyword.id else '' }}' href='keyword{{ keyword.id }}'>{{ keyword.name.plain()|u }}</a>
-      </li>
-    {% else %}
-      <p class='text-mute'>{% trans %}There are no keywords yet.  Be the first -{% endtrans %}</p>
+  <div class="mb-4">
+    <h2>Existing Keywords</h2>
+  </div>
+  <div class="alert alert-info alert-dismissible fade show" role="alert">
+    {% trans %}To edit an existing keyword (for spelling or typing errors), click on the entry.{% endtrans %}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% if db.keyword.list()|length -%}
+  <ul class="nav nav-pills d-grid d-lg-flex mb-4">
+    {% for keyword in db.keyword.list() -%}
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if context.id == keyword.id else '' }}" href="keyword{{ keyword.id }}">{{ keyword.name.plain()|u }}</a>
+    </li>
     {% endfor %}
-    {% if context.id %}
-    <li class='nav-item'>
-      <a class='nav-link close' href='keyword?@template=item' aria-label="Close">
+    {% if context.id -%}
+    <li class="nav-item">
+      <a class="nav-link close" href="keyword?@template=item" aria-label="Close">
         <span aria-hidden="true">&times;</span>
       </a>
     </li>
-    {% endif %}
+    {%- endif %}
   </ul>
-  <p class='text-warning'>
-   {% trans %}To edit an existing keyword (for spelling or typing errors),
-   click on its entry above.{% endtrans %}
-  </p>
-
-
-  <form class='form-inline' method="POST" action='{{ context.designator() }}'>
-    <input type='text' class='input-xlarge' name='name' value='{{ context.name if context.id else '' }}'>
+  {% else -%}
+  <p class="text-body-emphasis">{% trans %}There are no keywords yet.  Be the first -{% endtrans %}</p>
+  {%- endif %}
+  <form class="input-group" method="POST" action="{{ context.designator() }}">
+    <input type="text" class="form-control" name="name" value="{{ context.name if context.id else '' }}">
     <input type="hidden" name="@required" value="name">
     <input type="hidden" name="@template" value="item">
-    {{ context.submit(html_kwargs={ 'class': 'btn btn-primary' })|u|safe }}
+    {{ context.submit(html_kwargs={ 'class': 'btn btn-primary', 'role': 'button' })|u|safe }}
   </form>
-{% endblock %}
+
+{%- endblock %}

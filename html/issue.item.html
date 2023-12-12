@@ -1,57 +1,83 @@
 {% extends 'layout/page.html' %}
 
-{% block head_title %}
-  {% if context.id %}
-    Issue {{ context.id }}: {{ context.title.plain()|u }} - {{ config.TRACKER_NAME }}
-  {% else %}
-    New Issue - {{ config.TRACKER_NAME }}
-  {% endif %}
-{% endblock %}
+{% block head_title -%}
+  {% if context.id -%}
+    {% trans %}Issue{% endtrans %} {{ context.id }}: {{ context.title.plain()|u }} - {{ config.TRACKER_NAME }}
+  {% else -%}
+    {% trans %}New Issue{% endtrans %} - {{ config.TRACKER_NAME }}
+  {%- endif %}
+{%- endblock %}
 
-{% block page_header %}
-  {% if not (context.id or context.is_edit_ok()) %}
-    New Issue
-  {% elif not context.id and context.is_edit_ok() %}
-    New Issue Editing
-  {% else %}
-    Issue {{ context.id }}
-  {% endif %}
-{% endblock %}
+{% block page_header -%}
+  {% if not (context.id or context.is_edit_ok()) -%}
+    {% trans %}New Issue{% endtrans %}
+  {% elif not context.id and context.is_edit_ok() -%}
+    {% trans %}New Issue Editing{% endtrans %}
+  {% else -%}
+    {% trans %}Issue{% endtrans %} {{ context.id }}
+  {%- endif %}
+{%- endblock %}
 
-{% block extracss %}
+{% block extracss -%}
+  {% if context.is_edit_ok() -%}
+  <link rel="stylesheet" type="text/css" href="@@file/easymde.min.css">
+  {%- endif %}
+{%- endblock %}
+
+{% block extrajs -%}
   {% if context.is_edit_ok() %}
-    <link rel="stylesheet" type="text/css" href="@@file/easymde.min.css">
+  <script src="@@file/easymde.min.js"></script>
+  <script type="text/javascript">
+    (() => {
+        let node = document.getElementById('change_note');
+        let initEasyMde = () => {
+            node.parentNode.appendChild(
+                Object.assign(
+                    document.createElement('input'), {
+                        type: 'hidden',
+                        name: 'msg-1@type',
+                        value: 'text/markdown'
+                    })),
+            new EasyMDE({
+                element: node,
+                status: false,
+                styleSelectedText: false,
+                renderingConfig: {
+                    singleLineBreaks: {{ config.MARKDOWN_BREAK_ON_NEWLINE and 'true' or 'false' }}
+                }}).render()
+        };
+    {%- if context.id %}
+        node.value ? initEasyMde() : node.addEventListener('focus', initEasyMde)
+    {%- else %}
+        initEasyMde()
+    {%- endif -%}
+  }) ();
+  </script>
   {% endif %}
-{% endblock %}
+{%- endblock %}
 
-{% block extrajs %}
-  {% if context.is_edit_ok() %}
-    <script src='@@file/easymde.min.js'></script>
-    <script type="text/javascript">
-    (function () {
-      var node = $('#change_note')[0];
-      var initEasyMde = function () {
-        node.parentNode.appendChild($('<input/>', { type: 'hidden', name: 'msg-1@type', value: 'text/markdown'})[0]);
-        var easymde = new EasyMDE({ element: node, status: false,
-      styleSelectedText: false, renderingConfig: {singleLineBreaks: {{ config.MARKDOWN_BREAK_ON_NEWLINE and 'true' or 'false' }} }});
-        easymde.render();
-      };
-      {% if context.id %}
-      if (node.value) {
-        initEasyMde();
-      } else {
-        node.addEventListener('focus', initEasyMde);
-      }
-      {% else %}
-      initEasyMde();
-      {% endif %}
-    }) ();
-    </script>
-  {% endif %}
-{% endblock %}
+{% block content -%}
 
-{% block content %}
   {% include 'layout/permission.html' %}
+
+  {% if context.id -%}
+  {% set creation_date = context.creation.plain()|u|replace('.', ' ') %}
+  {% set activity_date = context.activity.plain()|u|replace('.', ' ') %}
+  <ul class="list-unstyled d-grid d-md-flex justify-content-md-between mb-4">
+    <li class="small">
+      {% trans %}Created by{% endtrans %}
+      <a class="link-body-emphasis fw-semibold" href="user{{ context.creator.id }}"
+         title="{{ context.creator.realname.plain()|d(context.creator.plain())|u }}">{{ context.creator.plain()|u }}</a>
+      <time title="{{ creation_date }}" datetime="{{ creation_date }}">{{ context.creation.reldate()|u }}</time>
+    </li>
+    <li class="small">
+      {% trans %}Last changed by{% endtrans %}
+      <a class="link-body-emphasis fw-semibold" href="user{{ context.actor.id }}"
+         title="{{ context.actor.realname.plain()|d(context.actor.plain())|u }}">{{ context.actor.plain()|u }}</a>
+      <time title="{{ activity_date }}" datetime="{{ activity_date }}">{{ context.activity.reldate()|u }}</time>
+    </li>
+  </ul>
+  {%- endif %}
 
   {% if context.is_view_ok() %}
     {% if context.is_edit_ok() %}
@@ -61,57 +87,99 @@
     {% endif %}
   {% endif %}
 
-  {% if context.id %}
-    <p>
-      Created on <b>{{ context.creation.plain()|u }}</b>
-      by <b>{{ context.creator.plain()|u }}</b>,
-      last changed <b>{{ context.activity.reldate()|u }}</b>
-      by <b>{{ context.actor.plain()|u }}</b>.
-    </p>
-  {% endif %}
-
-  {% if context.files %}
-    {% include 'file.index.html' %}
-  {% endif %}
+  {% if context.files -%}
+  <section class="mb-4">
+    <div class="row g-4">
+      {% for file in context.files -%}
+      {% set file_date = file.creation.plain()|u|replace('.', ' ') %}
+      <div class="col-md-4">
+        <div class="card h-100 bg-body-tertiary">
+          <article class="d-inline-flex dropdown">
+            <header class="card-body overflow-hidden">
+              <p class="card-title text-truncate" title="{{ file.name.plain()|u }}"><strong>{{ file.name.plain()|u }}</strong></p>
+              <p class="d-grid d-md-flex justify-content-md-between gap-1 card-subtitle">
+                <span class="small">
+                  {% trans %}Uploaded by{% endtrans %}
+                  <a class="link-body-emphasis fw-semibold" title="{{ file.creator.realname.plain()|d(file.creator.plain())|u }}" href="user{{ file.creator.id }}">
+                    {{- file.creator.plain()|u -}}
+                  </a>
+                  <time datetime="{{ file_date }}" title="{{ file_date }}">{{ file.creation.reldate()|u }}</time>
+                </span>
+                <span class="small fst-italic" title="{% trans %}Content Type{% endtrans %}: {{ file.type.plain()|u }}">{{ file.type.plain()|u }}</span>
+              </p>
+            </header>
+            <div class="btn btn-link link-body-emphasis border-start rounded-0 p-3 dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" data-bs-offset="0,10"></div>
+            <form class="dropdown-menu dropdown-menu-end w-100" method="POST" action="issue{{ context.id }}">
+              <a class="dropdown-item" href="{{ file.download_url()|u|safe }}">{% trans %}Download{% endtrans %}</a>
+              <a class="dropdown-item" href="file{{ file.id }}">
+                {%- if file.is_edit_ok() %}{% trans %}Edit{% endtrans %}{% else %}{% trans %}View{% endtrans %}{% endif -%}
+              </a>
+              {% if file.is_edit_ok() %}
+              <div class="dropdown-divider"></div>
+              <input type="hidden" name="@remove@files" value="{{ file.id }}">
+              <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
+              <input type="hidden" name="@action" value="edit">
+              <input class="dropdown-item" type="submit" value="{% trans %}Remove{% endtrans %}">
+              {% endif %}
+            </form>
+          </article>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {%- endif %}
 
   {% if context.messages %}
-    <h4>Messages</h4>
-    {% for msg in context.messages.reverse() %}
-      <div class="row row-cols-1 row-cols-md-4">
-        <div class="col col-md-auto">
-          <a href='msg{{ msg.id }}'>msg{{msg.id}} (view)</a>
-        </div>
-        <div class="col col-md-auto">
-          Author: {{ msg.author.plain()|u }}
-        </div>
-        <div class="col col-md-auto">
-          Date: {{ msg.date.plain()|u }}
-        </div>
-        <div class="col col-md-auto">
-          {% if context.is_edit_ok() %}
-            <form method="POST" action='issue{{ context.id }}' class='form-inline'>
-              <input type="hidden" name="@remove@messages" value='{{ msg.id }}'>
-              <input name="@csrf" type="hidden"
-                     value="{{ utils.anti_csrf_nonce() }}">
-              <input type="hidden" name="@action" value="edit">
-              <input class="btn btn-danger btn-sm" type="submit" value="{% trans %}Remove{% endtrans %}">
-            </form>
-          {% endif %}
+  <section class="mb-4">
+    {% for msg in context.messages.reverse() -%}
+    {% set msg_date = msg.date.plain()|u|replace('.', ' ') %}
+    <article class="card mb-4">
+      <header class="card-header">
+        <ul class="list-inline mb-0">
+          <li class="list-inline-item">
+            <a class="link-body-emphasis fw-bold" href="user{{ msg.author.id }}"
+               title="{{ msg.author.realname.plain()|d(msg.author.plain())|u }}">{{ msg.author.plain()|u }}</a>
+            {% trans %}commented{% endtrans %}
+            <a class="link-body-emphasis" href="msg{{ msg.id }}">
+              <time title="{{ msg_date }}" datetime="{{ msg_date }}">{{ msg.date.reldate() }}</time>
+            </a>
+          </li>
+          {% if msg.files -%}
+          <li class="list-inline-item ms-auto">
+            <span class="badge text-bg-secondary" title="{% trans %}Files{% endtrans %}: {{ msg.files|length }}">
+              {% trans n=msg.files|length %}{{ n }} file{% pluralize %}{{ n }} files{% endtrans %}
+            </span>
+          </li>
+          {%- endif %}
+        </ul>
+      </header>
+      <div class="card-body">
+        <div class="d-flex flex-column gap-3">
+          {% if msg.type == 'text/markdown' -%}
+          <div class="card-text">{{ msg.content.markdown()|u|safe }}</div>
+          {% elif msg.type == 'text/x-rst' -%}
+          <div class="card-text">{{ msg.content.rst()|u|safe }}</div>
+          {% else -%}
+          <pre class="card-text">{{ msg.content.hyperlinked()|u|safe }}</pre>
+          {%- endif %}
+          {% if context.is_edit_ok() -%}
+          <form class="align-self-md-end" method="POST" action="issue{{ context.id }}">
+            <input type="hidden" name="@remove@messages" value="{{ msg.id }}">
+            <input name="@csrf" type="hidden" value="{{ utils.anti_csrf_nonce() }}">
+            <input type="hidden" name="@action" value="edit">
+            <input class="btn btn-danger btn-sm w-100" type="submit" value="{% trans %}Remove{% endtrans %}">
+          </form>
+          {%- endif %}
         </div>
       </div>
-      <div>
-      {% if msg.type == 'text/markdown' %}
-        <div class="msg">{{ msg.content.markdown()|u|safe }}</div>
-      {% elif msg.type == 'text/x-rst' %}
-        <div class="msg">{{ msg.content.rst()|u|safe }}</div>
-      {% else %}
-        <pre class="msg">{{ msg.content.hyperlinked()|u|safe }}</pre>
-      {% endif %}
-      </div>
+    </article>
     {% endfor %}
+  </section>
   {% endif %}
 
-  <div class='vspace-five'></div>
+  <section class="table-responsive">
+    {{ context.history()|u|safe }}
+  </section>
 
-  {{ context.history()|u|safe }}
-{% endblock %}
+{%- endblock %}

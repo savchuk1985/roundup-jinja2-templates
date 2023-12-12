@@ -3,18 +3,15 @@
 {% else %}
 {% extends "layout/page.html" -%}
 
-{% block head_title %}
+{% block head_title -%}
   {% trans %}You can not view query{% endtrans %} - {{ config.TRACKER_NAME }}
-{% endblock -%}
+{%- endblock %}
 
-{% block page_header %}
+{% block page_header -%}
   {% trans %}You can not view query.{% endtrans %}
-{% endblock -%}
+{%- endblock %}
 
-{% block content %}
-  <td class="content">
-    You are not allowed to view {{ context._classname }}
-    with id {{ context.id }}
-  </td>
-{% endblock %}
+{% block content -%}
+  <p>You are not allowed to view {{ context._classname }} with id {{ context.id }}</p>
+{%- endblock %}
 {% endif %}

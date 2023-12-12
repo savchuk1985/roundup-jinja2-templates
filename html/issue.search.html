@@ -1,6 +1,6 @@
 {% extends 'layout/page.html' %}
 
-{% set cols = request.columns or 'id activity title status assignedto'.split() %}
+{% set cols = request.columns or 'id activity title status assignedto keyword'.split() %}
 {% set sort_on = request.sort and request.sort[0] or None %}
 {% set sort_desc = sort_on and sort_on[0] == '-' %}
 {% set sort_on = (sort_on and sort_on[1]) or 'activity' %}
@@ -8,202 +8,198 @@
 {% set group_desc = group_on and group_on[0] == '-' %}
 {% set group_on = (group_on and group_on[1]) or 'status' %}
 
+{% set group_disabled -%}
+<button type="button" class="btn btn-outline-secondary" disabled>Group on</button>
+{%- endset %}
+
 {% macro input(name, type='text') -%}
-  <input class="form-control" type="{{ type }}" name="{{ name }}"
-		 value="{{ request.form.getvalue(name, '') }}" />
+  <input class="form-control" id="{{ name }}" type="{{ type }}" name="{{ name }}" value="{{ request.form.getvalue(name, '') }}">
 {%- endmacro %}
 {% macro display_column(name) -%}
-  <input type="checkbox" name="@columns"
-		 value="{{ name }}" {% if name in cols %}checked{% endif %} />
+  <input class="btn-check" id="{{ name }}-display" autocomplete="off" type="checkbox" name="@columns" value="{{ name }}" {% if name in cols %}checked{% endif %}>
+  <label class="btn btn-outline-secondary" for="{{ name }}-display">{% trans %}Display{% endtrans %}</label>
 {%- endmacro %}
 {% macro sort_column(name) -%}
-  <input type="radio" name="@sort"
-		 value="{{ name }}" {% if name == sort_on %}checked{% endif %} />
+  <input class="btn-check" id="{{ name }}-sort" autocomplete="off" type="radio" name="@sort" value="{{ name }}" {% if name == sort_on %}checked{% endif %}>
+  <label class="btn btn-outline-secondary" for="{{ name }}-sort">{% trans %}Sort on{% endtrans %}</label>
 {%- endmacro %}
 {% macro group_column(name) -%}
-  <input type="radio" name="@group"
-		 value="{{ name }}" {% if name == group_on %}checked{% endif %} />
+  <input class="btn-check" id="{{ name }}-group" autocomplete="off" type="radio" name="@group" value="{{ name }}" {% if name == group_on %}checked{% endif %}>
+  <label class="btn btn-outline-secondary" for="{{ name }}-group">{% trans %}Group on{% endtrans %}</label>
 {%- endmacro %}
 {% macro option_value(option, id, name) -%}
-  <option value="{{ id }}"
-		  {% if id == request.form.getvalue(option, '') %}selected{% endif %}	>{{ name|u }}</option>
+  <option value="{{ id }}" {% if id == request.form.getvalue(option, '') %}selected{% endif %}>{{ name|u }}</option>
 {%- endmacro %}
 
-{% block head_title %}
-  Issue searching
-{% endblock %}
+{% block head_title -%}
+  {% trans %}Issue searching{% endtrans %}
+{%- endblock %}
 
-{% block page_header %}
-  Issue searching
-{% endblock %}
+{% block page_header -%}
+  {% trans %}Issue searching{% endtrans %}
+{%- endblock %}
 
-{% block content %}
-
-<form method="GET" name="itemSynopsis" action="{{ request.classname }}">
-
-<table class="form">
-
-<tr>
- <th class="header">&nbsp;</th>
- <th class="header">{% trans %}Filter on{% endtrans %}</th>
- <th class="header">{% trans %}Display{% endtrans %}</th>
- <th class="header">{% trans %}Sort on{% endtrans %}</th>
- <th class="header">{% trans %}Group on{% endtrans %}</th>
-</tr>
-
-<tr>
-  <th>{% trans %}All text*:{% endtrans %}</th>
-  <td>{{ input('@search_text') }}</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Title:{% endtrans %}</th>
-  <td>{{ input('title') }}</td>
-  <td class="text-center">{{ display_column('title') }}</td>
-  <td class="text-center">{{ sort_column('title') }}</td>
-  <td>&nbsp;</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Keyword:{% endtrans %}</th>
-  <td><select class="custom-select" name="keyword" id="keyword">
-	  {{ option_value('keyword', '', 'don\'t care') }}
-	  {{ option_value('keyword', '-1', 'not selected') }}
-      <option value="" disabled="disabled">------------</option>
-	  {% for keyword in db['keyword'].list() %}
-	  {{ option_value('keyword', keyword.id, keyword.name.plain()) }}
-	  {% endfor %}
-	  </select></td>
-  <td class="text-center">{{ display_column('id') }}</td>
-  <td class="text-center">{{ sort_column('id') }}</td>
-  <td>&nbsp;</td>
-</tr>
-
-<tr>
-  <th>{% trans %}ID:{% endtrans %}</th>
-  <td>{{ input('id') }}</td>
-  <td class="text-center">{{ display_column('id') }}</td>
-  <td class="text-center">{{ sort_column('id') }}</td>
-  <td>&nbsp;</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Creation Date:{% endtrans %}</th>
-  <td>{{ input('creation') }}</td>
-  <td class="text-center">{{ display_column('creation') }}</td>
-  <td class="text-center">{{ sort_column('creation') }}</td>
-  <td class="text-center">{{ group_column('creation') }}</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Activity:{% endtrans %}</th>
-  <td>{{ input('activity') }}</td>
-  <td class="text-center">{{ display_column('activity') }}</td>
-  <td class="text-center">{{ sort_column('activity') }}</td>
-  <td>&nbsp;</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Priority:{% endtrans %}</th>
-  <td><select class="custom-select" name="priority" id="priority">
-	  {{ option_value('priority', '', 'don\'t care') }}
-	  {{ option_value('priority', '-1', 'not selected') }}
-      <option value="" disabled="disabled">------------</option>
-	  {% for priority in db['priority'].list() %}
-	  {{ option_value('priority', priority.id, priority.name.plain()) }}
-	  {% endfor %}
-	  </select></td>
-  <td class="text-center">{{ display_column('priority') }}</td>
-  <td class="text-center">{{ sort_column('priority') }}</td>
-  <td class="text-center">{{ group_column('priority') }}</td>
-</tr>
-
-<tr>
-  <th>Status:</th>
-  <td><select class="custom-select" name="status" id="status">
-	  {{ option_value('status', '', 'don\'t care') }}
-	  {{ option_value('status', '-1', 'not selected') }}
-	  {{ option_value('status', status_notresolved, 'not resolved') }}
-      <option value="" disabled="disabled">------------</option>
-	  {% for status in db['status'].list() %}
-	  {{ option_value('status', status.id, status.name.plain()) }}
-	  {% endfor %}
-	  </select></td>
-  <td class="text-center">{{ display_column('status') }}</td>
-  <td class="text-center">{{ sort_column('status') }}</td>
-  <td class="text-center">{{ group_column('status') }}</td>
-</tr>
-
-<tr>
-  <th>{% trans %}Assigned to:{% endtrans %}</th>
-  <td>{{ input('submitter') }}</td>
-  <td class="text-center">{{ display_column('assignedto') }}</td>
-  <td class="text-center">{{ sort_column('assignedto') }}</td>
-  <td class="text-center">{{ group_column('assignedto') }}</td>
-</tr>
-
-<tr>
- <th>{% trans %}No Sort or group:{% endtrans %}</th>
- <td>&nbsp;</td>
- <td>&nbsp;</td>
- <td class="text-center"><input type="radio" name="@sort" value=""></td>
- <td class="text-center"><input type="radio" name="@group" value=""></td>
-</tr>
-
-<tr>
-<th>{% trans %}Pagesize:{% endtrans %}</th>
-<td><input class="form-control col-4" name="@pagesize" value="{{ request.form.getfirst('@pagesize', '50') }}" /></td>
-</tr>
-
-<tr>
-<th>{% trans %}Start With:{% endtrans %}</th>
-<td><input class="form-control col-4" name="@startwith" value="{{ request.form.getfirst('@startwith', '0') }}" /></td>
-</tr>
-
-<tr>
-<th>{% trans %}Sort Descending:{% endtrans %}</th>
-<td><input type="checkbox" name="@sortdir" {% if sort_desc %}checked{% endif %} /></td>
-</tr>
-
-<tr>
-<th>{% trans %}Group Descending:{% endtrans %}</th>
-<td><input type="checkbox" name="@groupdir" {% if group_desc %}checked{% endif %} /></td>
-</tr>
-
-{% if request.user.hasPermission('Edit', 'query') %}
-<tr>
-  <th>{% trans %}Query name**:{% endtrans %}</th>
-  {% set value = request.form.getvalue('@queryname', '') %}
-  <td>
-    <input name="@queryname" value="{{ value }}" />
-    <input type="hidden" name="@old-queryname" value="{{ value }}" />
-    <input type="hidden" name="@template" value="index|search" />
-  </td>
-</tr>
-{% endif %}
-
-<tr>
-  <td>
-   &nbsp;
-   <input type="hidden" name="@action" value="search">
-  </td>
-  <td><input class="btn btn-primary" type="submit" value="{% trans %}Search{% endtrans %}"></td>
-</tr>
-
-<tr>
-  <td>&nbsp;</td>
-  <td colspan="4" class="help">
-    {% trans %}*: The "all text" field will look in message bodies and issue titles{% endtrans %}
-    {% if request.user.hasPermission('Edit', 'query') %}
-    <br>
-    {% trans %}**: If you supply a name, the query will be saved off and available as a link in the sidebar{% endtrans %}
-    {% endif %}
-  </td>
-</tr>
-</table>
-</form>
-
-{% endblock %}
+{% block content -%}
+  <form method="GET" name="itemSynopsis" action="{{ request.classname }}">
+    <div class="row mb-2 mb-md-4">
+      <label for="@search_text" class="col-md-2 col-form-label">{% trans %}All text{% endtrans %}</label>
+      <div class="col-md-10">
+        {{ input('@search_text') }}
+        <span class="form-text">
+          {% trans %}Search by message bodies and issue titles{% endtrans %}
+        </span>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="title-input-group" class="col-md-2 col-form-label">{% trans %}Title{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="title-input-group">
+          {{ input('title') }}
+          {{ display_column('title') }}
+          {{ sort_column('title') }}
+          {{ group_disabled }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="keyword-input-group" class="col-md-2 col-form-label">{% trans %}Keyword{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="keyword-input-group">
+          <select class="form-select" name="keyword" id="keyword">
+            {{ option_value('keyword', '', 'don\'t care') }}
+            {{ option_value('keyword', '-1', 'not selected') }}
+          <option value="" disabled="disabled">------------</option>
+            {% for keyword in db['keyword'].list() %}
+            {{ option_value('keyword', keyword.id, keyword.name.plain()) }}
+            {% endfor %}
+          </select>
+          {{ display_column('keyword') }}
+          {{ sort_column('keyword') }}
+          {{ group_disabled }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="id-input-group" class="col-md-2 col-form-label">{% trans %}ID{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="id-input-group">
+          {{ input('id', type='number') }}
+          {{ display_column('id') }}
+          {{ sort_column('id') }}
+          {{ group_disabled }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="creation-input-group" class="col-md-2 col-form-label">{% trans %}Creation Date{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="creation-input-group">
+          {{ input('creation', type='date') }}
+          {{ display_column('creation') }}
+          {{ sort_column('creation') }}
+          {{ group_column('creation') }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="activity-input-group" class="col-md-2 col-form-label">{% trans %}Activity{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="activity-input-group">
+          {{ input('activity', type='date') }}
+          {{ display_column('activity') }}
+          {{ sort_column('activity') }}
+          {{ group_disabled }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="priority-input-group" class="col-md-2 col-form-label">{% trans %}Priority{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="priority-input-group">
+          <select class="form-select" name="priority" id="priority">
+            {{ option_value('priority', '', 'don\'t care') }}
+            {{ option_value('priority', '-1', 'not selected') }}
+            <option value="" disabled="disabled">------------</option>
+            {% for priority in db['priority'].list() %}
+            {{ option_value('priority', priority.id, priority.name.plain()) }}
+            {% endfor %}
+          </select>
+          {{ display_column('priority') }}
+          {{ sort_column('priority') }}
+          {{ group_column('priority') }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="status-input-group" class="col-md-2 col-form-label">{% trans %}Status{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="status-input-group">
+          <select class="form-select" name="status" id="status">
+            {{ option_value('status', '', 'don\'t care') }}
+            {{ option_value('status', '-1', 'not selected') }}
+            {{ option_value('status', status_notresolved, 'not resolved') }}
+            <option value="" disabled="disabled">------------</option>
+            {% for status in db['status'].list() %}
+            {{ option_value('status', status.id, status.name.plain()) }}
+            {% endfor %}
+          </select>
+          {{ display_column('status') }}
+          {{ sort_column('status') }}
+          {{ group_column('status') }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4">
+      <label for="assignedto-input-group" class="col-md-2 col-form-label">{% trans %}Assigned to{% endtrans %}</label>
+      <div class="col-md-10">
+        <div class="input-group" id="assignedto-input-group">
+          {{ input('submitter') }}
+          {{ display_column('assignedto') }}
+          {{ sort_column('assignedto') }}
+          {{ group_column('assignedto') }}
+        </div>
+      </div>
+    </div>
+    <div class="row mb-2 mb-md-4 mt-4 mt-md-0">
+      <div class="col-md-2"></div>
+      <div class="col-md-10 d-grid d-lg-flex gap-4">
+        <input class="btn-check" id="sortdir" autocomplete="off" type="checkbox" name="@sortdir" {% if sort_desc %}checked{% endif %}>
+        <label class="btn btn-outline-secondary flex-fill" for="sortdir">{% trans %}Sort Descending{% endtrans %}</label>
+        <input class="btn-check" id="groupdir" autocomplete="off" type="checkbox" name="@groupdir" {% if sort_desc %}checked{% endif %}>
+        <label class="btn btn-outline-secondary flex-fill" for="groupdir">{% trans %}Group Descending{% endtrans %}</label>
+        <input class="btn-check" id="nosort" autocomplete="off" type="radio" name="@sort" value="">
+        <label class="btn btn-outline-secondary flex-fill" for="nosort">{% trans %}Disable Sorting{% endtrans %}</label>
+        <input class="btn-check" id="nogroup" autocomplete="off" type="radio" name="@group" value="">
+        <label class="btn btn-outline-secondary flex-fill" for="nogroup">{% trans %}Disable Grouping{% endtrans %}</label>
+      </div>
+    </div>
+    <div class="row">
+        <label for="pagesize" class="col-md-2 col-form-label">{% trans %}Pagesize{% endtrans %}</label>
+        <div class="col-md-4 mb-2 mb-md-4">
+          <input class="form-control" id="pagesize" type="number" name="@pagesize" value="{{ request.form.getfirst('@pagesize', '50') }}">
+        </div>
+        <label for="startwith" class="col-md-2 col-form-label">{% trans %}Start With{% endtrans %}</label>
+        <div class="col-md-4 mb-2 mb-md-4">
+          <input class="form-control" id="startwith" type="number" name="@startwith" value="{{ request.form.getfirst('@startwith', '0') }}">
+        </div>
+    </div>
+    {% if request.user.hasPermission('Edit', 'query') -%}
+    {%- set value = request.form.getvalue('@queryname', '') -%}
+    <div class="row mb-2 mb-md-4">
+      <label for="queryname" class="col-md-2 col-form-label">{% trans %}Query name{% endtrans %}</label>
+      <div class="col-md-10">
+        <input class="form-control" id="queryname" name="@queryname" value="{{ value }}">
+        <input type="hidden" name="@old-queryname" value="{{ value }}">
+        <input type="hidden" name="@template" value="index|search">
+        <span class="form-text">
+          {% trans %}If you supply a name, the query will be saved off and available as a link in the account menu{% endtrans %}
+        </span>
+      </div>
+    </div>
+    {%- endif %}
+    <div class="d-grid d-lg-flex justify-content-lg-end">
+      <input type="hidden" name="@action" value="search">
+      <input class="btn btn-primary" type="submit" value="{% trans %}Search{% endtrans %}">
+    </div>
+  </form>
+{%- endblock %}
