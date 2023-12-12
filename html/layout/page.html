@@ -9,6 +9,7 @@
     <meta name="description" content="Roundup is a python-based, MIT licensed issue-tracking system with command-line, web and e-mail interfaces">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block head_title %}{% endblock %}</title>
+    <script src="@@file/color-mode-loader.min.js"></script>
     <link rel="stylesheet" type="text/css" href="@@file/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="@@file/bootstrap-icons.min.css">
     {%- block extracss %} {% endblock %}
@@ -48,6 +49,7 @@
     {%- endblock %}
     <script src="@@file/popper.min.js" defer></script>
     <script src="@@file/bootstrap.min.js" defer></script>
+    <script src="@@file/color-mode-switcher.min.js" defer></script>
     {% block extrajs %} {% endblock %}
   </body>
 </html>

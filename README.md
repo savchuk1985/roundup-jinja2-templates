@@ -45,6 +45,7 @@ UX/UI changes
 * Global file list and issues now use different templates to display files.
 * User list and file list can now also be downloaded in CSV format.
 * Generated pages now use HTML5 semantic tags and heading hierarchy.
+* Added support for Bootstrap dark theme and theme switching.
 
 Restrictions
 ------------
