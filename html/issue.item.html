@@ -25,8 +25,13 @@
 {%- endblock %}
 
 {% block extrajs -%}
+  {% if context.is_edit_ok() -%}
+  <script defer src="@@file/easymde.min.js"></script>
+  {%- endif %}
+{%- endblock %}
+
+{% block inlinejs -%}
   {% if context.is_edit_ok() %}
-  <script src="@@file/easymde.min.js"></script>
   <script type="text/javascript">
     (() => {
         let node = document.getElementById('change_note');
