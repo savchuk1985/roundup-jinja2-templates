@@ -59,12 +59,12 @@
     <li class="nav-item">
       <a class="nav-link text-nowrap" href="user?@template=forgotten">{% trans %}Lost your login?{% endtrans %}</a>
     </li>
-    <li class="nav-item dropdown">
+    <li class="nav-item dropdown" id="login-dropdown">
       <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">{% trans %}Login{% endtrans %}</a>
       <div class="dropdown-menu dropdown-menu-lg-end p-3">
         <form class="d-grid gap-3" method="POST" action="{{ request.base }}">
-          <input class="form-control w-auto" type="text" required name="__login_name" placeholder="{% trans %}Username{% endtrans%}">
-          <input class="form-control w-auto" type="password" required name="__login_password" placeholder="{% trans %}Password{% endtrans %}">
+          <input class="form-control w-auto" type="text" name="__login_name" placeholder="{% trans %}Username{% endtrans%}" required>
+          <input class="form-control w-auto" type="password" name="__login_password" placeholder="{% trans %}Password{% endtrans %}" required>
           <div class="form-check form-switch">
             <label class="form-check-label">
               <input type="checkbox" class="form-check-input" name="remember">{% trans %}Remember me?{% endtrans %}
