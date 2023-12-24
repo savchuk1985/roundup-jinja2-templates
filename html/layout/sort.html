@@ -7,7 +7,7 @@
       <select class="form-select" name="@sort{{ i }}">
         <option value="">{% trans %}- nothing -{% endtrans %}</option>
         {%- for prop in context.properties() %}
-        <option value="{{ prop._name }}" {% if prop._name == key[1] %}selected{% endif %}>{{ prop._name }}</option>
+        <option value="{{ prop._name }}" {% if prop._name == key[1] %}selected{% endif %}>{{ i18n.gettext(prop._name)|u|safe }}</option>
         {%- endfor %}
       </select>
       <input type="checkbox" class="btn-check" autocomplete="off" name="@sortdir{{ i }}" id="sortdir{{ i }}" {% if key[0] == '-' %}checked{% endif %}>
@@ -25,7 +25,7 @@
       <select class="form-select" name="@group{{ i }}">
         <option value="">{% trans %}- nothing -{% endtrans %}</option>
         {%- for prop in context.properties() %}
-        <option value="{{ prop._name }}" {% if prop._name == key[1] %}selected{% endif %}>{{ prop._name }}</option>
+        <option value="{{ prop._name }}" {% if prop._name == key[1] %}selected{% endif %}>{{ i18n.gettext(prop._name)|u|safe }}</option>
         {%- endfor %}
       </select>
       <input type="checkbox" class="btn-check" autocomplete="off" name="@groupdir{{ i }}" id="groupdir{{ i }}" {% if key[0] == '-' %}checked{% endif %}>

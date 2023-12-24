@@ -9,7 +9,7 @@
 {% set group_on = (group_on and group_on[1]) or 'status' %}
 
 {% set group_disabled -%}
-<button type="button" class="btn btn-outline-secondary" disabled>Group on</button>
+<button type="button" class="btn btn-outline-secondary" disabled>{% trans %}Group on{% endtrans %}</button>
 {%- endset %}
 
 {% macro input(name, type='text') -%}
@@ -28,7 +28,7 @@
   <label class="btn btn-outline-secondary" for="{{ name }}-group">{% trans %}Group on{% endtrans %}</label>
 {%- endmacro %}
 {% macro option_value(option, id, name) -%}
-  <option value="{{ id }}" {% if id == request.form.getvalue(option, '') %}selected{% endif %}>{{ name|u }}</option>
+  <option value="{{ id }}" {% if id == request.form.getvalue(option, '') %}selected{% endif %}>{{ i18n.gettext(name)|u|safe }}</option>
 {%- endmacro %}
 
 {% block head_title -%}

@@ -58,9 +58,9 @@
   <ul class="row list-unstyled mb-0">
     {% if request.show.status -%}
     <li class="col-auto col-lg">
-      {% if issue.status -%}
-      <small title="{% trans %}Status{% endtrans %}: {{ issue.status.plain()|u }}">
-        {{ issue.status.plain()|u }}
+      {% if issue.status %}{% set status = i18n.gettext(issue.status.plain())|u|safe %}
+      <small title="{% trans %}Status{% endtrans %}: {{ status }}">
+        {{ status }}
       </small>
       {%- endif %}
     </li>
@@ -81,9 +81,9 @@
     {%- endif %}
     {% if request.show.priority -%}
     <li class="col-auto col-lg">
-      {% if issue.priority -%}
-      <small title="{% trans %}Priority{% endtrans %}: {{ issue.priority.plain()|u }}">
-        {{ issue.priority.plain()|u }}
+      {% if issue.priority %}{% set priority = i18n.gettext(issue.priority.plain())|u|safe %}
+      <small title="{% trans %}Priority{% endtrans %}: {{ priority }}">
+        {{ priority }}
       </small>
       {%- endif %}
     </li>
@@ -144,7 +144,7 @@
   {% if batch -%}
   {% if request.group|length == 1 -%}
   {% for group1 in batch|groupby(key1) -%}
-  {% set header = group1.grouper|default(ungrouped(key1), true) %}
+  {% set header = i18n.gettext(group1.grouper.plain()|u|default(ungrouped(key1), true))|safe %}
   <section class="mb-4">
     <header class="mb-3">
       {{ print_grouper(header) }}
@@ -160,8 +160,8 @@
   {% endfor %}
   {% elif request.group|length >= 2 -%}
   {% for group1 in batch|groupby(key1) %}{% for group2 in group1.list|groupby(key2) -%}
-  {% set grouper1 = group1.grouper|default(ungrouped(key1), true) %}
-  {% set grouper2 = group2.grouper|default(ungrouped(key2), true) %}
+  {% set grouper1 = i18n.gettext(group1.grouper.plain()|u|default(ungrouped(key1), true))|safe %}
+  {% set grouper2 = i18n.gettext(group2.grouper.plain()|u|default(ungrouped(key2), true))|safe %}
   {% set header = [grouper1, grouper2]|join(' ') %}
   <section class="mb-4">
     <header class="mb-3">

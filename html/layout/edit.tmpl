@@ -1,31 +1,31 @@
 {% macro field_large(text, id, name, required=False) %}
   <div class="col-md-12">
-    <label class="form-label" for="{{ id }}">{% trans %}{{ text }}{% endtrans %}</label>
+    <label class="form-label" for="{{ id }}">{{ i18n.gettext(text)|u|safe }}</label>
     {{ context[name].field(class='form-control', id=id, **({'required': ''} if required else {}))|u|safe }}
   </div>
 {% endmacro -%}
 {% macro field_small(text, id, name, required=False) %}
   <div class="col-md-6">
-    <label class="form-label" for="{{ id }}">{% trans %}{{ text }}{% endtrans %}</label>
+    <label class="form-label" for="{{ id }}">{{ i18n.gettext(text)|u|safe }}</label>
     {{ context[name].field(class='form-control', id=id, **({'required': ''} if required else {}))|u|safe }}
   </div>
 {% endmacro -%}
 {% macro file(text, id, name, multiple=False) %}
   <div class="col-md-auto">
-    <label class="form-label" for="{{ id }}">{% trans %}{{ text }}{% endtrans %}</label>
+    <label class="form-label" for="{{ id }}">{{ i18n.gettext(text)|u|safe }}</label>
     <input class="form-control btn btn-sm btn-outline-secondary" name="{{ name }}" id="{{ id }}" type="file" {% if multiple %}multiple{% endif %}>
   </div>
 {% endmacro -%}
 {% macro option(text, id, required=False) %}
   <div class="col-md">
-    <label class="form-label" for="{{ id }}">{% trans %}{{ text }}{% endtrans %}</label>
+    <label class="form-label" for="{{ id }}">{{ i18n.gettext(text)|u|safe }}</label>
       {% set kwargs = { 'required' : 'required' } %}
     {{ context[id].menu(html_kwargs=dict([('class', 'custom-select form-control'), ('id', id)] + ([('required', 'required')] if required else [])))|u|safe }}
   </div>
 {% endmacro -%}
 {% macro textarea(text, id, name, required=False) %}
   <div class="col-md-12">
-    <label class="form-label" for="{{ id }}">{% trans %}{{ text }}{% endtrans %}</label>
+    <label class="form-label" for="{{ id }}">{{ i18n.gettext(text)|u|safe }}</label>
     <textarea class="form-control" name="{{ name }}" id="{{ id }}" rows="5">{{ request.form.getvalue(name, '')|u }}</textarea>
   </div>
 {% endmacro -%}

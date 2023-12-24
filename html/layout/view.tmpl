@@ -8,7 +8,7 @@
     {% for item in context[name].plain().split(',')|map('trim')|u if context[name] %}
     <li>
       <a class="btn btn-sm btn-secondary" role="button"
-         title="{% trans %}{{ text }}{% endtrans %}: {{ item }}"
+         title="{{ i18n.gettext(text)|u|safe }}: {{ item }}"
          href="{{ request.indexargs_url('issue', {
                   '@search_text': '',
                   '@sort': '-activity',
@@ -22,25 +22,25 @@
 {% endmacro -%}
 {% macro field_large(text, name) %}
   <li class="d-flex border-bottom">
-    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
-    <span class="fw-semibold">{{ context[name].plain()|u|d('none', true) }}</span>
+    <span class="me-auto">{{ i18n.gettext(text)|u|safe }}</span>
+    <span class="fw-semibold">{{ i18n.gettext(context[name].plain()|u|d('none', true))|safe }}</span>
   </li>
 {% endmacro -%}
 {% macro field_large_value(text, value) %}
   <li class="d-flex border-bottom">
-    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="me-auto">{{ i18n.gettext(text)|u|safe }}</span>
     <span class="fw-semibold">{{ value|u|safe }}</span>
   </li>
 {% endmacro -%}
 {% macro field_small(text, name) %}
   <li class="d-flex border-bottom">
-    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
-    <span class="fw-semibold">{{ context[name].plain()|u|d('none', true) }}</span>
+    <span class="me-auto">{{ i18n.gettext(text)|u|safe }}</span>
+    <span class="fw-semibold">{{ i18n.gettext(context[name].plain()|u|d('none', true))|safe }}</span>
   </li>
 {% endmacro -%}
 {% macro field_small_value(text, value) %}
   <li class="d-flex border-bottom">
-    <span class="me-auto">{% trans %}{{ text }}{% endtrans %}</span>
+    <span class="me-auto">{{ i18n.gettext(text)|u|safe }}</span>
     <span class="fw-semibold">{{ value|u|safe }}</span>
   </li>
 {% endmacro -%}

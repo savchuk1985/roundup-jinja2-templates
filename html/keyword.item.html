@@ -11,10 +11,10 @@
 {% block content -%}
 
   <div class="mb-4">
-    <h2>Existing Keywords</h2>
+    <h2>{% trans %}Existing Keywords{% endtrans %}</h2>
   </div>
   <div class="alert alert-info alert-dismissible fade show" role="alert">
-    {% trans %}To edit an existing keyword (for spelling or typing errors), click on the entry.{% endtrans %}
+    {% trans %}To edit an existing keyword (for spelling or typing errors), click on its entry above.{% endtrans %}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
   {% if db.keyword.list()|length -%}
